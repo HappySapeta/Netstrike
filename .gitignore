@@ -438,5 +438,16 @@ FodyWeavers.xsd
 *.msm
 *.msp
 
-# Jetbrains Rider
+# Custom ignores
+# ----------------------
 **/.idea
+*.sln
+*.vcxproj
+*.vcxproj.filters
+# ----------------------
+
+# Custom don't ignores
+# ----------------------
+!ThirdParty/Binaries/Premake/**
+!ThirdParty/**/*.lib
+# ----------------------
