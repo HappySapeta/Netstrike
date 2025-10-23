@@ -8,7 +8,7 @@ configurations
     "Release" 
 }
 
-startproject "Core"
+startproject "Game"
 
 --Workspace-wide build options for MSVC
 filter "system:windows"
@@ -29,3 +29,4 @@ linkoptions
 OutputDir = "%{cfg.system}-%{cfg.architecture}/%{cfg.buildcfg}"
 
 include "Projects/Core/Build-Core.lua"
+include "Projects/Game/Build-Game.lua"
