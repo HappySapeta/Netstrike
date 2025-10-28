@@ -1,13 +1,13 @@
 ﻿#include "Actor/SpriteComponent.h"
-#include <SFML/Graphics/Sprite.hpp>
-#include <SFML/Graphics/RenderWindow.hpp>
-#include <SFML/Graphics/Texture.hpp>
-
 #include "Logger.h"
 #include "Utils.h"
+#include "Actor/Actor.h"
 
-void NS::SpriteComponent::Draw(sf::RenderWindow& RenderWindow)
+void NS::SpriteComponent::Draw(sf::RenderWindow& RenderWindow, const NS::Transform& Transform)
 {
+	Sprite_->setPosition(Transform.Position);
+	Sprite_->setScale(Transform.Scale);
+	
 	if (Sprite_)
 	{
 		RenderWindow.draw(*Sprite_);

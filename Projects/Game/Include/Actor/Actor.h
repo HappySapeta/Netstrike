@@ -3,10 +3,7 @@
 #include <SFML/Graphics/Transform.hpp>
 #include <SFML/System/Vector2.hpp>
 
-namespace NS
-{
-	class ActorComponent;
-}
+#include "ActorComponent.h"
 
 namespace NS
 {
@@ -36,6 +33,9 @@ namespace NS
 		}
 
 		virtual void Update(const float DeltaTime);
+
+		void SetActorLocation(const sf::Vector2f NewLocation);
+		const sf::Vector2f& GetActorLocation() const;
 
 	protected:
 

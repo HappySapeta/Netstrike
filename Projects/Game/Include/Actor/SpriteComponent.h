@@ -1,14 +1,13 @@
 ﻿#pragma once
+#include "ActorComponent.h"
+
 #include <memory>
 #include <string>
-#include "ActorComponent.h"
+#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Texture.hpp>
 
-namespace sf
-{
-	class RenderWindow;
-	class Sprite;
-}
+#include "Actor.h"
 
 namespace NS
 {
@@ -16,7 +15,7 @@ namespace NS
 	{
 	public:
 		virtual void Update(const float DeltaTime) override {};
-		void Draw(sf::RenderWindow& RenderWindow);
+		void Draw(sf::RenderWindow& RenderWindow, const NS::Transform& Transform);
 		void SetTexture(const std::string& TextureResource);
 
 	private:

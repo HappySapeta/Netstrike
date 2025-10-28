@@ -6,6 +6,7 @@
 int main()
 {
 	NS::Tank Tank;
+	Tank.SetActorLocation({100, 100});
 	
 	sf::RenderWindow Window(sf::VideoMode({1280, 720}), "!!NetStrike!!");
 	NSLOG(NS::ELogLevel::INFO, "Created a new window!");

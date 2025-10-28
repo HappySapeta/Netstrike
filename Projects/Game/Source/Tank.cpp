@@ -18,6 +18,6 @@ void NS::Tank::Draw(sf::RenderWindow& Window)
 {
 	if (SpriteComp_)
 	{
-		SpriteComp_->Draw(Window);
+		SpriteComp_->Draw(Window, Transform_);
 	}
 }

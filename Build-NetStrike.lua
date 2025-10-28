@@ -10,6 +10,9 @@ configurations
 
 startproject "Game"
 
+resourcedir = "%{wks.location}/Resources"
+defines { 'RESOURCE_DIR="' .. resourcedir .. '"' }
+
 --Workspace-wide build options for MSVC
 filter "system:windows"
 filter "configurations:Debug"
@@ -37,8 +40,5 @@ linkoptions
 }
 
 OutputDir = "%{cfg.system}-%{cfg.architecture}/%{cfg.buildcfg}"
-
-resourcedir = "%{wks.location}/Resources"
-defines { 'RESOURCE_DIR="' .. resourcedir .. '"' }
 
 include "Projects/Game/Build-Game.lua"
