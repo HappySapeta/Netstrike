@@ -3,23 +3,19 @@
 #include <SFML/Graphics/Texture.hpp>
 
 #include "Actor/Actor.h"
+#include "Actor/SpriteComponent.h"
 
 namespace NS
 {
 	class Tank : public NS::Actor
 	{
 	public:
-
 		Tank();
-		
-		virtual void Draw(sf::RenderWindow& Window) override;
 		virtual void Update(const float DeltaTime) override;
+		virtual void Draw(sf::RenderWindow& Window);
 
 	private:
 
-		void Debug_SetTexture(const char* TextureLocation);
-		
-	private:
-		sf::Texture Texture_;
+		SpriteComponent* SpriteComp_ = nullptr;
 	};
 }

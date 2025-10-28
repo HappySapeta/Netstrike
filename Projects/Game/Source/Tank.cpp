@@ -1,31 +1,23 @@
 ﻿#include "Tank.h"
-
-#include <SFML/Graphics/RenderTarget.hpp>
-#include <SFML/Graphics/RenderWindow.hpp>
-#include <SFML/Graphics/Sprite.hpp>
-#include <SFML/Window/Window.hpp>
-
-#include "Logger.h"
+#include "Actor/SpriteComponent.h"
 
 NS::Tank::Tank()
 {
-	Debug_SetTexture("../../Resources/Tank.png");
-}
-
-void NS::Tank::Draw(sf::RenderWindow& Window)
-{
-	sf::Sprite Sprite(Texture_);
-	Window.draw(Sprite);
+	SpriteComp_ = AddComponent<SpriteComponent>();
+	if (SpriteComp_)
+	{
+		SpriteComp_->SetTexture("Textures\\Tank.png");
+	}
 }
 
 void NS::Tank::Update(const float DeltaTime)
 {
 }
 
-void NS::Tank::Debug_SetTexture(const char* TextureLocation)
+void NS::Tank::Draw(sf::RenderWindow& Window)
 {
-	if (!Texture_.loadFromFile(TextureLocation))
+	if (SpriteComp_)
 	{
-		NSLOG(ELogLevel::ERROR, "Failed to find texture. ", TextureLocation);
+		SpriteComp_->Draw(Window);
 	}
 }

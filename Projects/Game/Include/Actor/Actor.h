@@ -5,6 +5,11 @@
 
 namespace NS
 {
+	class ActorComponent;
+}
+
+namespace NS
+{
 	struct Transform : sf::Transform
 	{
 		Transform();
@@ -23,11 +28,18 @@ namespace NS
 
 	public:
 
-		virtual void Draw(sf::RenderWindow& Window) = 0;
-		virtual void Update(const float DeltaTime) = 0;
+		template<class ComponentType, typename = std::enable_if_t<std::is_base_of_v<ActorComponent, ComponentType>>>
+		ComponentType* AddComponent()
+		{
+			Components_.push_back(std::make_unique<ComponentType>());
+			return static_cast<ComponentType*>(Components_.back().get());
+		}
+
+		virtual void Update(const float DeltaTime);
 
 	protected:
 
 		Transform Transform_;
+		std::vector<std::unique_ptr<ActorComponent>> Components_;
 	};
 }

@@ -1,9 +1,12 @@
 #include <SFML/Graphics.hpp>
 
 #include "Logger.h"
+#include "Tank.h"
 
 int main()
 {
+	NS::Tank Tank;
+	
 	sf::RenderWindow Window(sf::VideoMode({1280, 720}), "!!NetStrike!!");
 	NSLOG(NS::ELogLevel::INFO, "Created a new window!");
 	while (Window.isOpen())
@@ -19,6 +22,10 @@ int main()
 		}
 		
 		Window.clear();
+
+		Tank.Update(0.016f);
+		Tank.Draw(Window);
+		
 		Window.display();
 	}
 
