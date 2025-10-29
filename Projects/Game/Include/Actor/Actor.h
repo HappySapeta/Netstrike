@@ -7,7 +7,7 @@
 
 namespace NS
 {
-	struct Transform : sf::Transform
+	struct Transform
 	{
 		Transform();
 		
