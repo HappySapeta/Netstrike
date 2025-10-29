@@ -1,9 +1,5 @@
 ﻿#pragma once
-#include <SFML/Graphics/Sprite.hpp>
-#include <SFML/Graphics/Texture.hpp>
-
 #include "Actor/Actor.h"
-#include "Actor/SpriteComponent.h"
 
 namespace NS
 {
@@ -15,7 +11,6 @@ namespace NS
 		virtual void Draw(sf::RenderWindow& Window);
 
 	private:
-
-		SpriteComponent* SpriteComp_ = nullptr;
+		class SpriteComponent* SpriteComp_ = nullptr;
 	};
 }

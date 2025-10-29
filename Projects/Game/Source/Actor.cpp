@@ -12,3 +12,13 @@ void NS::Actor::Update(const float DeltaTime)
 		Component->Update(DeltaTime);
 	}
 }
+
+void NS::Actor::SetActorLocation(const sf::Vector2f NewLocation)
+{
+	Transform_.Position = NewLocation;
+}
+
+const sf::Vector2f& NS::Actor::GetActorLocation() const
+{
+	return Transform_.Position;
+}
