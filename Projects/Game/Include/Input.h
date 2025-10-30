@@ -6,26 +6,33 @@
 
 namespace NS
 {
-	typedef std::function<void(const float InputValue)> InputAction;
+	typedef std::function<void(const float InputValue)> InputAxisBinding;
+	typedef std::function<void(const sf::Keyboard::Scancode Scancode)> InputActionBinding;
 	class Input
 	{
 	public:
 
 		static Input* Get();
 		void HandleAxes();
+		void HandleEvent(const std::optional<sf::Event>& Event);
 		void Update(const std::optional<sf::Event>& event);
 
 	public:
 
-		void BindAxisHorizontal(const InputAction& Callback);
+		void BindOnKeyPressed(sf::Keyboard::Scancode Key, const InputActionBinding& Callback);
+		void BindOnKeyReleased(sf::Keyboard::Scancode Key, const InputActionBinding& Callback);
+
+		void BindAxisHorizontal(const InputAxisBinding& Callback);
 		void UnBindAxisHorizontal();
 		
-		void BindAxisVertical(const InputAction& Callback);
+		void BindAxisVertical(const InputAxisBinding& Callback);
 		void UnBindAxisVertical();
 		
 	private:
 		static std::unique_ptr<Input> Instance_;
-		InputAction HorizontalCallback;
-		InputAction VerticalCallback;
+		InputAxisBinding HorizontalCallback;
+		InputAxisBinding VerticalCallback;
+		std::array<InputActionBinding, sf::Keyboard::ScancodeCount> PressedCallbacks;
+		std::array<InputActionBinding, sf::Keyboard::ScancodeCount> ReleasedCallbacks;
 	};
 }

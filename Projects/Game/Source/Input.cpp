@@ -3,18 +3,9 @@
 #include <optional>
 #include <SFML/Window/Event.hpp>
 #include "InputConfiguration.h"
+#include "Logger.h"
 
 std::unique_ptr<NS::Input> NS::Input::Instance_(nullptr);
-
-void NS::Input::Update(const std::optional<sf::Event>& Event)
-{
-	HandleAxes();
-	
-	if (!Event)
-	{
-		return;
-	}
-}
 
 NS::Input* NS::Input::Get()
 {
@@ -24,6 +15,54 @@ NS::Input* NS::Input::Get()
 	}
 
 	return Instance_.get();
+}
+
+void NS::Input::Update(const std::optional<sf::Event>& Event)
+{
+	HandleAxes();
+	HandleEvent(Event);
+}
+
+void NS::Input::BindOnKeyPressed(sf::Keyboard::Scancode Key, const InputActionBinding& Callback)
+{
+	int Index = static_cast<int>(Key);
+	if (Index < 0 || Index >= sf::Keyboard::ScancodeCount)
+	{
+		NSLOG(ELogLevel::ERROR, "Invalid Scancode {} supplied for binding.", Index);
+		return;
+	}
+	PressedCallbacks.at(Index) = Callback;
+}
+
+void NS::Input::BindOnKeyReleased(sf::Keyboard::Scancode Key, const InputActionBinding& Callback)
+{
+	int Index = static_cast<int>(Key);
+	if (Index < 0 || Index > sf::Keyboard::ScancodeCount)
+	{
+		NSLOG(ELogLevel::ERROR, "Invalid Scancode {} supplied for binding.", Index);
+		return;
+	}
+	ReleasedCallbacks.at(Index) = Callback;
+}
+
+void NS::Input::BindAxisHorizontal(const InputAxisBinding& Callback)
+{
+	HorizontalCallback = Callback;
+}
+
+void NS::Input::UnBindAxisHorizontal()
+{
+	HorizontalCallback = nullptr;
+}
+
+void NS::Input::BindAxisVertical(const InputAxisBinding& Callback)
+{
+	VerticalCallback = Callback;
+}
+
+void NS::Input::UnBindAxisVertical()
+{
+	VerticalCallback = nullptr;
 }
 
 void NS::Input::HandleAxes()
@@ -61,22 +100,41 @@ void NS::Input::HandleAxes()
 	}
 }
 
-void NS::Input::BindAxisHorizontal(const InputAction& Callback)
+void NS::Input::HandleEvent(const std::optional<sf::Event>& Event)
 {
-	HorizontalCallback = Callback;
-}
+	if (!Event)
+	{
+		return;
+	}
 
-void NS::Input::UnBindAxisHorizontal()
-{
-	HorizontalCallback = nullptr;
-}
-
-void NS::Input::BindAxisVertical(const InputAction& Callback)
-{
-	VerticalCallback = Callback;
-}
-
-void NS::Input::UnBindAxisVertical()
-{
-	VerticalCallback = nullptr;
+	if (const auto* KeyPressedEvent = Event->getIf<sf::Event::KeyPressed>())
+	{
+		const sf::Keyboard::Scancode Scancode = KeyPressedEvent->scancode;
+		const int Index = static_cast<int>(Scancode);
+		if (Index < 0 || Index >= sf::Keyboard::ScancodeCount)
+		{
+			NSLOG(ELogLevel::ERROR, "Failed to handle input scancode {}.", Index);
+			return;
+		}
+		auto& Callback = PressedCallbacks.at(Index);
+		if (Callback)
+		{
+			Callback(Scancode);
+		}
+	}
+	else if (const auto* KeyReleasedEvent = Event->getIf<sf::Event::KeyReleased>())
+	{
+		const sf::Keyboard::Scancode Scancode = KeyReleasedEvent->scancode;
+		const int Index = static_cast<int>(Scancode);
+		if (Index < 0 || Index >= sf::Keyboard::ScancodeCount)
+		{
+			NSLOG(ELogLevel::ERROR, "Failed to handle input scancode {}.", Index);
+			return;
+		}
+		auto& Callback = ReleasedCallbacks.at(Index);
+		if (Callback)
+		{
+			Callback(Scancode);
+		}
+	}
 }
