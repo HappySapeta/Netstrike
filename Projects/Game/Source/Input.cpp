@@ -34,6 +34,17 @@ void NS::Input::BindOnKeyPressed(sf::Keyboard::Scancode Key, const InputActionBi
 	PressedCallbacks.at(Index) = Callback;
 }
 
+void NS::Input::UnBindOnKeyPressed(sf::Keyboard::Scancode Key)
+{
+	const int Index = static_cast<int>(Key);
+	if (Index < 0 || Index >= sf::Keyboard::ScancodeCount)
+	{
+		NSLOG(ELogLevel::ERROR, "Invalid Scancode {} supplied for unbinding.", Index);
+		return;
+	}
+	PressedCallbacks.at(Index) = nullptr;
+}
+
 void NS::Input::BindOnKeyReleased(sf::Keyboard::Scancode Key, const InputActionBinding& Callback)
 {
 	int Index = static_cast<int>(Key);
@@ -43,6 +54,17 @@ void NS::Input::BindOnKeyReleased(sf::Keyboard::Scancode Key, const InputActionB
 		return;
 	}
 	ReleasedCallbacks.at(Index) = Callback;
+}
+
+void NS::Input::UnBindOnKeyReleased(sf::Keyboard::Scancode Key)
+{
+	const int Index = static_cast<int>(Key);
+	if (Index < 0 || Index >= sf::Keyboard::ScancodeCount)
+	{
+		NSLOG(ELogLevel::ERROR, "Invalid Scancode {} supplied for unbinding.", Index);
+		return;
+	}
+	ReleasedCallbacks.at(Index) = nullptr;
 }
 
 void NS::Input::BindAxisHorizontal(const InputAxisBinding& Callback)

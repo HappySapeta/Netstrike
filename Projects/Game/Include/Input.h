@@ -13,20 +13,25 @@ namespace NS
 	public:
 
 		static Input* Get();
-		void HandleAxes();
-		void HandleEvent(const std::optional<sf::Event>& Event);
 		void Update(const std::optional<sf::Event>& event);
 
 	public:
 
 		void BindOnKeyPressed(sf::Keyboard::Scancode Key, const InputActionBinding& Callback);
+		void UnBindOnKeyPressed(sf::Keyboard::Scancode Key);
 		void BindOnKeyReleased(sf::Keyboard::Scancode Key, const InputActionBinding& Callback);
+		void UnBindOnKeyReleased(sf::Keyboard::Scancode Key);
 
 		void BindAxisHorizontal(const InputAxisBinding& Callback);
 		void UnBindAxisHorizontal();
 		
 		void BindAxisVertical(const InputAxisBinding& Callback);
 		void UnBindAxisVertical();
+
+	private:
+
+		void HandleAxes();
+		void HandleEvent(const std::optional<sf::Event>& Event);
 		
 	private:
 		static std::unique_ptr<Input> Instance_;
