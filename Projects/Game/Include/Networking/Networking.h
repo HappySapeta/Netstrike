@@ -18,6 +18,7 @@ namespace NS
 	public:
 
 		void Connect(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
+		void Listen();
 
 	private:
 
@@ -27,5 +28,7 @@ namespace NS
 
 		static std::unique_ptr<Networking> Instance_;
 		sf::TcpSocket MainSocket_;
+		sf::TcpListener MainListener_;
+		std::vector<sf::TcpSocket> ClientSockets_;
 	};
 }
