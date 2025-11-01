@@ -4,8 +4,10 @@ workspace "NetStrike"
 architecture "x64"
 configurations 
 { 
-    "Debug", 
-    "Release" 
+    "Debug-Server",
+    "Debug-Client",
+    "Release-Server",
+    "Release-Client"
 }
 
 startproject "Game"
@@ -15,7 +17,7 @@ defines { 'RESOURCE_DIR="' .. resourcedir .. '"' }
 
 --Workspace-wide build options for MSVC
 filter "system:windows"
-filter "configurations:Debug"
+filter "configurations:Debug-Server or Debug-Client"
 buildoptions 
 {
     "/EHsc",
@@ -24,7 +26,7 @@ buildoptions
     "/D_ITERATOR_DEBUG_LEVEL=2"
 }
 
-filter "configurations:Release"
+filter "configurations:Release-Server or Release-Client"
 buildoptions
 {
     "/EHsc",
