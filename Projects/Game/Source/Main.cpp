@@ -1,14 +1,12 @@
 #include <SFML/Graphics.hpp>
 
+#include "GameConfiguration.h"
 #include "Logger.h"
 #include "Tank.h"
 
 int main()
 {
-	NS::Tank Tank;
-	Tank.SetActorLocation({100, 100});
-	
-	sf::RenderWindow Window(sf::VideoMode({1280, 720}), "!!NetStrike!!");
+	sf::RenderWindow Window(sf::VideoMode({NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT}), "!!NetStrike!!");
 	NSLOG(NS::ELogLevel::INFO, "Created a new window!");
 	while (Window.isOpen())
 	{
@@ -23,10 +21,6 @@ int main()
 		}
 		
 		Window.clear();
-
-		Tank.Update(0.016f);
-		Tank.Draw(Window);
-		
 		Window.display();
 	}
 
