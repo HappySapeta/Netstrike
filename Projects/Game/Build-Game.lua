@@ -13,6 +13,16 @@ files
     "Source/**.cpp"
 }
 
+filter "configurations:Debug-Server or Release-Server"
+defines { "NS_SERVER" }
+removefiles { "Source/Client.cpp" }
+
+filter "configurations:Debug-Client or Release-Client"
+defines { "NS_CLIENT" }
+removefiles { "Source/Server.cpp" }
+
+filter {}
+
 includedirs 
 {
     "Include/",
@@ -33,7 +43,7 @@ filter "system:windows"
 systemversion "latest"
 defines { "WINDOWS", "WIN32" }
 
-filter "configurations:Debug"
+filter "configurations:Debug-Server or Debug-Client"
 defines { "DEBUG" }
 runtime "Debug"
 symbols "On"
@@ -50,7 +60,7 @@ links
 --    "xcopy /Y /D \"..\\..\\ThirdParty\\SFML-3.0.0\\bin\\*.dll\" \"$(OutDir)\""
 --}
 
-filter "configurations:Release"
+filter "configurations:Release-Server or Release-Client"
 defines { "RELEASE" }
 runtime "Release"
 optimize "On"
