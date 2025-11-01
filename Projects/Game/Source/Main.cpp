@@ -1,25 +1,10 @@
 #include <SFML/Graphics.hpp>
-
 #include "GameConfiguration.h"
-#include "Input.h"
 #include "Logger.h"
-#include "Tank.h"
-#include "Engine/Engine.h"
-
-NS::Engine Engine;
-NS::Tank* Tank = nullptr;
-
-void DestroyActor(const sf::Keyboard::Scancode ScanCode)
-{
-	Engine.DestroyActor(Tank);
-}
 
 int main()
 {
-	Tank = Engine.CreateActor<NS::Tank>();
-	NS::Input::Get()->BindOnKeyPressed(sf::Keyboard::Scancode::G, &DestroyActor);
-	
-	sf::RenderWindow Window(sf::VideoMode({NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT}), "!!NetStrike!!");
+	sf::RenderWindow Window(sf::VideoMode({NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT}), "!! N E T S T R I K E !!");
 	NSLOG(NS::ELogLevel::INFO, "Created a new window!");
 	while (Window.isOpen())
 	{
@@ -34,9 +19,6 @@ int main()
 		}
 		
 		Window.clear();
-		NS::Input::Get()->Update(Event);
-		Engine.Update(0.016f);
-		Engine.Draw(Window);
 		Window.display();
 	}
 
