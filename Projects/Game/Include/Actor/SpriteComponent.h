@@ -15,7 +15,7 @@ namespace NS
 	{
 	public:
 		virtual void Update(const float DeltaTime) override {};
-		void Draw(sf::RenderWindow& RenderWindow, const NS::Transform& Transform);
+		void Draw(sf::RenderWindow& RenderWindow);
 		void SetTexture(const std::string& TextureResource);
 
 	private:

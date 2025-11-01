@@ -4,6 +4,7 @@
 #include <SFML/System/Vector2.hpp>
 
 #include "ActorComponent.h"
+#include "SpriteComponent.h"
 
 namespace NS
 {
@@ -30,6 +31,22 @@ namespace NS
 		{
 			Components_.push_back(std::make_unique<ComponentType>());
 			return static_cast<ComponentType*>(Components_.back().get());
+		}
+
+		template<class ComponentType, typename = std::enable_if_t<std::is_base_of_v<ActorComponent, ComponentType>>>
+		std::vector<ComponentType*> GetComponents()
+		{
+			std::vector<ComponentType*> FoundComponents;
+			for (auto& Component : Components_)
+			{
+				ActorComponent* Ptr = Component.get();
+				if (dynamic_cast<ComponentType*>(Ptr))
+				{
+					FoundComponents.push_back(static_cast<ComponentType*>(Ptr));
+				}
+			}
+
+			return FoundComponents;
 		}
 
 		virtual void Update(const float DeltaTime);

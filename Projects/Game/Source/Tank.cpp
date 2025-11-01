@@ -13,11 +13,3 @@ NS::Tank::Tank()
 void NS::Tank::Update(const float DeltaTime)
 {
 }
-
-void NS::Tank::Draw(sf::RenderWindow& Window)
-{
-	if (SpriteComp_)
-	{
-		SpriteComp_->Draw(Window, Transform_);
-	}
-}

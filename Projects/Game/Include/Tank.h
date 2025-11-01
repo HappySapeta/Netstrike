@@ -8,7 +8,6 @@ namespace NS
 	public:
 		Tank();
 		virtual void Update(const float DeltaTime) override;
-		virtual void Draw(sf::RenderWindow& Window);
 
 	private:
 		class SpriteComponent* SpriteComp_ = nullptr;

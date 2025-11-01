@@ -1,12 +1,10 @@
 #include <SFML/Graphics.hpp>
-
 #include "GameConfiguration.h"
 #include "Logger.h"
-#include "Tank.h"
 
 int main()
 {
-	sf::RenderWindow Window(sf::VideoMode({NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT}), "!!NetStrike!!");
+	sf::RenderWindow Window(sf::VideoMode({NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT}), "!! N E T S T R I K E !!");
 	NSLOG(NS::ELogLevel::INFO, "Created a new window!");
 	while (Window.isOpen())
 	{

@@ -15,6 +15,11 @@ namespace NS
 		static Input* Get();
 		void Update(const std::optional<sf::Event>& event);
 
+		Input(const Input&) = delete;
+		Input(Input&&) = delete;
+		Input& operator=(const Input&) = delete;
+		Input& operator=(Input&&) = delete;
+	
 	public:
 
 		void BindOnKeyPressed(sf::Keyboard::Scancode Key, const InputActionBinding& Callback);
@@ -28,6 +33,10 @@ namespace NS
 		void BindAxisVertical(const InputAxisBinding& Callback);
 		void UnBindAxisVertical();
 
+	private:
+
+		Input() = default;
+		
 	private:
 
 		void HandleAxes();
