@@ -11,7 +11,7 @@ NS::Input* NS::Input::Get()
 {
 	if (!Instance_)
 	{
-		Instance_ = std::make_unique<Input>();
+		Instance_ = std::unique_ptr<Input>(new Input());
 	}
 
 	return Instance_.get();
