@@ -15,7 +15,12 @@ files
 
 filter "configurations:Debug-Server or Release-Server"
 defines { "NS_SERVER" }
-removefiles { "Source/Client.cpp" }
+removefiles 
+{ 
+    "Source/Client.cpp", 
+    "Include/Input.h",
+    "Source/Input.cpp"
+}
 
 filter "configurations:Debug-Client or Release-Client"
 defines { "NS_CLIENT" }
