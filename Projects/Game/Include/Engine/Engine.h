@@ -3,10 +3,8 @@
 #include <vector>
 #include <SFML/Graphics/RenderWindow.hpp>
 
-namespace NS
-{
-	class Actor;
-}
+#include "Actor/Actor.h"
+
 
 namespace NS
 {

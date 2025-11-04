@@ -16,7 +16,7 @@ NS::Networking* NS::Networking::Get()
 }
 
 // TODO: Use Non-blocking sockets if possible.
-void NS::Networking::TCPConnect(const sf::IpAddress& ServerAddress, const uint16_t ServerPort)
+sf::TcpSocket& NS::Networking::TCPConnect(const sf::IpAddress& ServerAddress, const uint16_t ServerPort)
 {
 	ClientSocket_.disconnect();
 	const auto ConnectStatus = ClientSocket_.connect(ServerAddress, ServerPort, sf::seconds(NS::DEFAULT_CONNECTION_TIMEOUT));
@@ -28,10 +28,12 @@ void NS::Networking::TCPConnect(const sf::IpAddress& ServerAddress, const uint16
 	{
 		NSLOG(NS::ELogLevel::INFO, "Connected successfully to server at {}:{}", ServerAddress.toString(), ServerPort);
 	}
+
+	return ClientSocket_;
 }
 
 // TODO: Use Non-blocking sockets if possible.
-void NS::Networking::TCPListen()
+sf::TcpListener& NS::Networking::TCPListen()
 {
 	ServerSocket_.close();
 	NSLOG(NS::ELogLevel::INFO, "Listening for connections on port {}", NS::SERVER_PORT);
@@ -45,4 +47,11 @@ void NS::Networking::TCPListen()
 			NSLOG(NS::ELogLevel::INFO, "Failed to accept connection.");
 		}
 	}
+
+	return ServerSocket_;
+}
+
+std::vector<sf::TcpSocket>& NS::Networking::GetClientSockets()
+{
+	return PerClientSockets_;
 }

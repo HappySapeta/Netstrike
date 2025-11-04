@@ -8,7 +8,7 @@ namespace NS
 	{
 	public:
 
-		static Networking* Get();
+		[[nodiscard]] static Networking* Get();
 
 		Networking(const Networking&) = delete;
 		Networking(Networking&&) = delete;
@@ -17,8 +17,9 @@ namespace NS
 
 	public:
 		
-		void TCPConnect(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
-		void TCPListen();
+		[[nodiscard]] sf::TcpSocket& TCPConnect(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
+		[[nodiscard]] sf::TcpListener& TCPListen();
+		std::vector<sf::TcpSocket>& GetClientSockets();
 
 	private:
 
@@ -28,10 +29,7 @@ namespace NS
 
 		static std::unique_ptr<Networking> Instance_;
 		sf::TcpSocket ClientSocket_;
-
-#ifdef NS_SERVER
 		sf::TcpListener ServerSocket_;
 		std::vector<sf::TcpSocket> PerClientSockets_;
-#endif
 	};
 }
