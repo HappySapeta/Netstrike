@@ -5,6 +5,16 @@
 
 std::unique_ptr<NS::Networking> NS::Networking::Instance_(nullptr);
 
+NS::Networking::Networking()
+	:
+#ifdef NS_SERVER
+	NetIdentity_(ENetAuthority::SERVER)
+#endif
+#ifdef NS_CLIENT
+	NetIdentity_(ENetAuthority::CLIENT)
+#endif
+{}
+
 NS::Networking* NS::Networking::Get()
 {
 	if (!Instance_)

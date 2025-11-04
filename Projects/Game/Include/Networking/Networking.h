@@ -4,6 +4,12 @@
 
 namespace NS
 {
+	enum class ENetAuthority
+	{
+		SERVER,
+		CLIENT
+	};
+	
 	class Networking
 	{
 	public:
@@ -23,10 +29,11 @@ namespace NS
 
 	private:
 
-		Networking() = default;
+		Networking();
 
 	private:
 
+		const ENetAuthority NetIdentity_;
 		static std::unique_ptr<Networking> Instance_;
 		sf::TcpSocket ClientSocket_;
 		sf::TcpListener ServerSocket_;
