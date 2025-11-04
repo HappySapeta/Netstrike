@@ -16,14 +16,9 @@ namespace NS
 		Networking& operator=(Networking&&) = delete;
 
 	public:
-
-#ifdef NS_CLIENT
-		void Connect(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
-#endif
-
-#ifdef NS_SERVER
-		void Listen();
-#endif
+		
+		void TCPConnect(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
+		void TCPListen();
 
 	private:
 
@@ -32,10 +27,7 @@ namespace NS
 	private:
 
 		static std::unique_ptr<Networking> Instance_;
-
-#ifdef NS_CLIENT
 		sf::TcpSocket ClientSocket_;
-#endif
 
 #ifdef NS_SERVER
 		sf::TcpListener ServerSocket_;
