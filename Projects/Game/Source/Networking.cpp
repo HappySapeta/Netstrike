@@ -60,11 +60,35 @@ void NS::Networking::PushRequest(const NetRequest& NewRequest)
 	OutgoingRequests_.push_back(NewRequest);
 }
 
+void NS::Networking::Update()
+{
+	ProcessRequests();
+}
+
 void NS::Networking::ProcessRequests()
 {
+	// Populate the queue with incoming requests
+#ifdef NS_CLIENT
+	{
+		sf::Packet Packet;
+		const auto ReceiveStatus = ServerSocket_.receive(Packet);
+		if (ReceiveStatus != sf::Socket::Status::Done)
+		{
+			NSLOG(LOGERROR, "[CLIENT] Failed to receive packet.");
+		}
+		else 
+		{
+			NS::NetRequest Request;
+			Packet >> Request;
+			IncomingRequests_.emplace_back(Request);
+		}
+	}
+#endif NS_CLIENT
+
 	while (!IncomingRequests_.empty())
 	{
 		NetRequest Request = IncomingRequests_.front();
+		NSLOG(LOGINFO, "[CLIENT] Processing packet");
 		IncomingRequests_.pop_front();
 
 #ifdef NS_CLIENT
@@ -85,7 +109,7 @@ void NS::Networking::ProcessRequests()
 	{
 		NetRequest Request = OutgoingRequests_.front();
 		OutgoingRequests_.pop_front();
-
+		NSLOG(LOGINFO, "[SERVER] Sending packet");
 #ifdef NS_SERVER
 		{
 			if (Request.Reliability == EReliability::RELIABLE)

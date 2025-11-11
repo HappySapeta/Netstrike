@@ -8,6 +8,9 @@ int main()
 {
 	sf::RenderWindow Window(sf::VideoMode({NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT}), "!! N E T S T R I K E !!");
 	NSLOG(NS::ELogLevel::INFO, "Created a new window!");
+
+	NS::Networking* Networking = NS::Networking::Get();
+	Networking->TCPConnect(NS::SERVER_ADDRESS, NS::SERVER_PORT);
 	
 	while (Window.isOpen())
 	{
@@ -20,6 +23,8 @@ int main()
 				Window.close();
 			}
 		}
+
+		Networking->Update();
 		
 		Window.clear();
 		Window.display();

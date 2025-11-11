@@ -46,6 +46,7 @@ namespace NS
 
 	inline void operator<<(sf::Packet& Packet, const NS::NetRequest& Request)
 	{
+		Packet << Request.Reliability;
 		Packet << Request.InstructionType;
 		Packet << Request.NetSource;
 		Packet << Request.InstanceId;
@@ -57,6 +58,8 @@ namespace NS
 	inline void operator>>(sf::Packet& Packet, NS::NetRequest& Request)
 	{
 		uint8_t Byte;
+		Packet >> Byte;
+		Request.Reliability = static_cast<NS::EReliability>(Byte);
 	
 		Packet >> Byte;
 		Request.InstructionType = static_cast<NS::EInstructionType>(Byte);
@@ -106,6 +109,7 @@ namespace NS
 	public:
 
 		void PushRequest(const NetRequest& NewRequest);
+		void Update();
 
 	private:
 
