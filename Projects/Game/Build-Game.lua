@@ -31,15 +31,8 @@ filter {}
 includedirs 
 {
     "Include/",
-	"../../ThirdParty/SFML-3.0.0/include"
+	"../../ThirdParty/SFML/include"
 }
-
-libdirs
-{
-	"../../ThirdParty/SFML-3.0.0/lib/"
-}
-
-links { "opengl32.lib", "freetype.lib", "winmm.lib", "gdi32.lib", "flac.lib", "vorbisenc.lib", "vorbisfile.lib", "vorbis.lib", "ogg.lib", "ws2_32.lib" }
 
 targetdir("../../Binaries/" .. OutputDir .. "/%{prj.name}")
 objdir("../../Binaries/Intermediates/" .. OutputDir .. "/%{prj.name}")
@@ -52,33 +45,59 @@ filter "configurations:Debug-Server or Debug-Client"
 defines { "DEBUG" }
 runtime "Debug"
 symbols "On"
-links 
-{ 
-    "sfml-audio-s-d.lib", 
-    "sfml-graphics-s-d.lib", 
-    "sfml-network-s-d.lib", 
-    "sfml-system-s-d.lib", 
-    "sfml-window-s-d.lib" 
+libdirs
+{
+    "../../ThirdParty/SFML/lib/Debug"
 }
---postbuildcommands
---{
---    "xcopy /Y /D \"..\\..\\ThirdParty\\SFML-3.0.0\\bin\\*.dll\" \"$(OutDir)\""
---}
+links
+{
+    "opengl32",
+    "winmm",
+    "gdi32",
+    "ws2_32",
+    "FLACd.lib",
+    "freetyped.lib",
+    "harfbuzzd.lib",
+    "oggd.lib",
+    "vorbisd.lib",
+    "vorbisencd.lib",
+    "vorbisfiled.lib",
+    "sfml-main-d.lib",
+    "sfml-system-s-d.lib",
+    "sfml-audio-s-d.lib", 
+    "sfml-window-s-d.lib",
+    "sfml-graphics-s-d.lib",
+    "sfml-network-s-d.lib",
+}
+
+filter {}
 
 filter "configurations:Release-Server or Release-Client"
 defines { "RELEASE" }
 runtime "Release"
 optimize "On"
 symbols "Off"
-links 
-{ 
-    "sfml-audio-s.lib", 
-    "sfml-graphics-s.lib", 
-    "sfml-network-s.lib", 
-    "sfml-system-s.lib", 
-    "sfml-window-s.lib" 
+libdirs
+{
+    "../../ThirdParty/SFML/lib/Release"
 }
---postbuildcommands
---{
---    "xcopy /Y /D \"..\\..\\ThirdParty\\SFML-3.0.0\\bin\\*.dll\" \"$(OutDir)\""
---}
+links
+{
+    "opengl32",
+    "winmm",
+    "gdi32",
+    "ws2_32",
+    "FLAC.lib",
+    "freetype.lib",
+    "harfbuzz.lib",
+    "ogg.lib",
+    "vorbis.lib",
+    "vorbisenc.lib",
+    "vorbisfile.lib",
+    "sfml-main.lib",
+    "sfml-system-s.lib",
+    "sfml-audio-s.lib",
+    "sfml-window-s.lib",
+    "sfml-graphics-s.lib",
+    "sfml-network-s.lib",
+}
