@@ -10,7 +10,7 @@ int main()
 	NSLOG(NS::ELogLevel::INFO, "Created a new window!");
 
 	NS::Networking* Networking = NS::Networking::Get();
-	Networking->TCPConnect(NS::SERVER_ADDRESS, NS::SERVER_PORT);
+	const auto& Socket = Networking->TCPConnect(NS::SERVER_ADDRESS, NS::SERVER_PORT);
 	
 	while (Window.isOpen())
 	{

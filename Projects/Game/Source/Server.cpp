@@ -16,7 +16,7 @@ static float DeltaTimeSecs = 0.016f;
 int main()
 {
 	NS::Networking* Networking = NS::Networking::Get();
-	Networking->TCPListen();
+	const auto& Socket = Networking->Server_Listen();
 
 	char Data[NS::PACKET_SIZE];
 	const char* Message = "Hello World!";
@@ -24,13 +24,11 @@ int main()
 
 	NS::NetRequest Request;
 	{
-		Request.NetSource = NS::ENetAuthority::SERVER;
 		Request.Reliability = NS::EReliability::RELIABLE;
 		Request.InstructionType = NS::EInstructionType::REPLICATION;
-		Request.Size = NS::PACKET_SIZE;
 		Request.InstanceId = 0;
 		Request.ObjectId = 0;
-
+		Request.Size = NS::PACKET_SIZE;
 		memcpy_s(Request.Data, NS::PACKET_SIZE, Data, NS::PACKET_SIZE);
 	}
 

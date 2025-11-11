@@ -30,9 +30,7 @@ namespace NS
 	{
 		EReliability Reliability;
 		EInstructionType InstructionType;
-		ENetAuthority NetSource;
 		uint8_t InstanceId;
-		
 		uint32_t ObjectId;
 		uint64_t Size;
 		char Data[NS::PACKET_SIZE];
@@ -41,14 +39,13 @@ namespace NS
 	struct ReplicationObject
 	{
 		void* DataPtr = nullptr;
-		uint64_t Size;
+		uint32_t Size;
 	};
 
 	inline void operator<<(sf::Packet& Packet, const NS::NetRequest& Request)
 	{
 		Packet << Request.Reliability;
 		Packet << Request.InstructionType;
-		Packet << Request.NetSource;
 		Packet << Request.InstanceId;
 		Packet << Request.ObjectId;
 		Packet << Request.Size;
@@ -58,14 +55,12 @@ namespace NS
 	inline void operator>>(sf::Packet& Packet, NS::NetRequest& Request)
 	{
 		uint8_t Byte;
+		
 		Packet >> Byte;
 		Request.Reliability = static_cast<NS::EReliability>(Byte);
 	
 		Packet >> Byte;
 		Request.InstructionType = static_cast<NS::EInstructionType>(Byte);
-
-		Packet >> Byte;
-		Request.NetSource = static_cast<NS::ENetAuthority>(Byte);
 	
 		Packet >> Request.InstanceId;
 		Packet >> Request.ObjectId;
@@ -91,25 +86,25 @@ namespace NS
 		Networking(Networking&&) = delete;
 		Networking& operator=(const Networking&) = delete;
 		Networking& operator=(Networking&&) = delete;
+		
+		void PushRequest(const NetRequest& NewRequest);
+		void Update();
+		void Client_ReceivePackets();
 
 	public:
 
 #ifdef NS_CLIENT
+		void Client_ProcessRequest(NS::NetRequest Request);
 		[[nodiscard]] sf::TcpSocket& TCPConnect(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
 #endif
 
-#ifdef NS_SERVER
-		[[nodiscard]] sf::TcpListener& TCPListen();
+#ifdef NS_SERVER // All public & server-only functions go here.
+		[[nodiscard]] sf::TcpListener& Server_Listen();
 		std::vector<sf::TcpSocket>& GetClientSockets()
 		{
 			return ConnectedClientSockets_;
 		}
 #endif
-
-	public:
-
-		void PushRequest(const NetRequest& NewRequest);
-		void Update();
 
 	private:
 
@@ -117,10 +112,11 @@ namespace NS
 		void ProcessRequests();
 		NS::ReplicationObject Unmap(uint32_t ObjectId);
 
-	private:
+#ifdef NS_SERVER // All private & server-only functions go here.
+		void Server_SendOutgoingPackets();
+#endif
 
-		const ENetAuthority NetIdentity_;
-		static std::unique_ptr<Networking> Instance_;
+	private:
 		
 #ifdef NS_CLIENT
 		sf::TcpSocket ServerSocket_;
@@ -129,6 +125,9 @@ namespace NS
 		sf::TcpListener ListenerSocket_;
 		std::vector<sf::TcpSocket> ConnectedClientSockets_;
 #endif
+		
+		static std::unique_ptr<Networking> Instance_;
+		const ENetAuthority NetIdentity_;
 
 		std::deque<NetRequest> IncomingRequests_;
 		std::deque<NetRequest> OutgoingRequests_;

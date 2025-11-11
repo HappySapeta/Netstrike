@@ -32,11 +32,52 @@ sf::TcpSocket& NS::Networking::TCPConnect(const sf::IpAddress& ServerAddress, co
 
 	return ServerSocket_;
 }
+
+void NS::Networking::Client_ProcessRequest(NS::NetRequest Request)
+{
+	if (Request.InstructionType == EInstructionType::REPLICATION)
+	{
+		const ReplicationObject& ReplObject = Unmap(Request.ObjectId);
+		if (ReplObject.DataPtr)
+		{
+			memcpy(ReplObject.DataPtr, Request.Data, ReplObject.Size);
+		}
+	}
+}
+
+void NS::Networking::Client_ReceivePackets()
+{
+	static bool done = false;
+	sf::Packet Packet;
+	if (!done)
+	{
+		done = true;
+		const auto ReceiveStatus = ServerSocket_.receive(Packet);
+		if (ReceiveStatus != sf::Socket::Status::Done)
+		{
+			NSLOG(LOGERROR, "[CLIENT] Failed to receive packet.");
+		}
+		else 
+		{
+			NS::NetRequest Request;
+			Packet >> Request;
+			IncomingRequests_.emplace_back(Request);
+		}
+	}
+		
+	while (!IncomingRequests_.empty())
+	{
+		NetRequest Request = IncomingRequests_.front();
+		NSLOG(LOGINFO, "[CLIENT] Processing packet");
+		IncomingRequests_.pop_front();
+		Client_ProcessRequest(Request);
+	}
+}
 #endif
 
 #ifdef NS_SERVER
 // TODO: Use Non-blocking sockets if possible.
-sf::TcpListener& NS::Networking::TCPListen()
+sf::TcpListener& NS::Networking::Server_Listen()
 {
 	ListenerSocket_.close();
 	NSLOG(NS::ELogLevel::INFO, "Listening for connections on port {}", NS::SERVER_PORT);
@@ -52,6 +93,31 @@ sf::TcpListener& NS::Networking::TCPListen()
 	}
 
 	return ListenerSocket_;
+}
+
+void NS::Networking::Server_SendOutgoingPackets()
+{
+	while (!OutgoingRequests_.empty())
+	{
+		NetRequest Request = OutgoingRequests_.front();
+		OutgoingRequests_.pop_front();
+		NSLOG(LOGINFO, "[SERVER] Sending packet");
+		{
+			if (Request.Reliability == EReliability::RELIABLE)
+			{
+				sf::TcpSocket& Socket = ConnectedClientSockets_.at(Request.InstanceId);
+
+				sf::Packet Packet;
+				Packet << Request;
+				const auto SendStatus = Socket.send(Packet);
+				if (SendStatus != sf::Socket::Status::Done)
+				{
+					NSLOG(ELogLevel::ERROR, "Failed to send packet. {}:{}",
+						  Socket.getRemoteAddress()->toString(), Socket.getRemotePort());
+				}
+			}
+		}
+	}
 }
 #endif
 
@@ -69,65 +135,12 @@ void NS::Networking::ProcessRequests()
 {
 	// Populate the queue with incoming requests
 #ifdef NS_CLIENT
-	{
-		sf::Packet Packet;
-		const auto ReceiveStatus = ServerSocket_.receive(Packet);
-		if (ReceiveStatus != sf::Socket::Status::Done)
-		{
-			NSLOG(LOGERROR, "[CLIENT] Failed to receive packet.");
-		}
-		else 
-		{
-			NS::NetRequest Request;
-			Packet >> Request;
-			IncomingRequests_.emplace_back(Request);
-		}
-	}
-#endif NS_CLIENT
-
-	while (!IncomingRequests_.empty())
-	{
-		NetRequest Request = IncomingRequests_.front();
-		NSLOG(LOGINFO, "[CLIENT] Processing packet");
-		IncomingRequests_.pop_front();
-
-#ifdef NS_CLIENT
-		{
-			if (Request.InstructionType == EInstructionType::REPLICATION && Request.NetSource == ENetAuthority::SERVER)
-			{
-				const ReplicationObject& ReplObject = Unmap(Request.ObjectId);
-				if (ReplObject.DataPtr)
-				{
-					memcpy(ReplObject.DataPtr, Request.Data, ReplObject.Size);
-				}
-			}
-		}
+	Client_ReceivePackets();
 #endif
-	}
 
-	while (!OutgoingRequests_.empty())
-	{
-		NetRequest Request = OutgoingRequests_.front();
-		OutgoingRequests_.pop_front();
-		NSLOG(LOGINFO, "[SERVER] Sending packet");
 #ifdef NS_SERVER
-		{
-			if (Request.Reliability == EReliability::RELIABLE)
-			{
-				sf::TcpSocket& Socket = ConnectedClientSockets_.at(Request.InstanceId);
-
-				sf::Packet Packet;
-				Packet << Request;
-				const auto SendStatus = Socket.send(Packet);
-				if (SendStatus != sf::Socket::Status::Done)
-				{
-					NSLOG(ELogLevel::ERROR, "Failed to send packet. {}:{}",
-						Socket.getRemoteAddress()->toString(), Socket.getRemotePort());
-				}
-			}
-		}
+	Server_SendOutgoingPackets();
 #endif
-	}
 }
 
 NS::ReplicationObject NS::Networking::Unmap(uint32_t ObjectId)
