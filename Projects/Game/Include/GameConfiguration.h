@@ -12,4 +12,5 @@ namespace NS
 	constexpr int64_t SERVER_TICK_DURATION_MS = 500;
 
 	constexpr float DEFAULT_CONNECTION_TIMEOUT = 30.0f;
+	constexpr uint8_t PACKET_SIZE = 100;
 }

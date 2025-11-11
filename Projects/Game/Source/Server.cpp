@@ -2,9 +2,7 @@
 #include <thread>
 
 #include "GameConfiguration.h"
-#include "Logger.h"
 #include "Engine/Engine.h"
-#include "Networking/Networking.h"
 
 static NS::Engine Engine;
 
@@ -16,30 +14,10 @@ static float DeltaTimeSecs = 0.016f;
 
 int main()
 {
-	NS::Networking* Networking = NS::Networking::Get();
- 	sf::TcpListener& Listener = Networking->TCPListen();
-	std::vector<sf::TcpSocket>& ClientSockets = Networking->GetClientSockets();
-	
 	while (true)
 	{
 		static TimePoint TickStart;
 		TickStart = HRClock::now();
-
-		for (sf::TcpSocket& ClientSocket : ClientSockets)
-		{
-			sf::Packet Packet;
-			const auto ReceiveStatus = ClientSocket.receive(Packet);
-			if (ReceiveStatus != sf::Socket::Status::Done)
-			{
-				NSLOG(NS::ELogLevel::ERROR, "Failed to received data from client socket.",
-					  ClientSocket.getRemoteAddress()->toString(), ClientSocket.getRemotePort());
-				continue;
-			}
-
-			int Value;
-			Packet >> Value; 
-			NSLOG(NS::ELogLevel::INFO, "Received message : {}.", Value);
-		}
 		
 		Engine.Update(0.016f);
 		
