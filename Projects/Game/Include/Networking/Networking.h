@@ -89,16 +89,14 @@ namespace NS
 		
 		void PushRequest(const NetRequest& NewRequest);
 		void Update();
-		void Client_ReceivePackets();
 
 	public:
 
-#ifdef NS_CLIENT
-		void Client_ProcessRequest(NS::NetRequest Request);
+#ifdef NS_CLIENT // A public client-only functions go here.
 		[[nodiscard]] sf::TcpSocket& TCPConnect(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
 #endif
 
-#ifdef NS_SERVER // All public & server-only functions go here.
+#ifdef NS_SERVER // All public server-only functions go here.
 		[[nodiscard]] sf::TcpListener& Server_Listen();
 		std::vector<sf::TcpSocket>& GetClientSockets()
 		{
@@ -112,18 +110,27 @@ namespace NS
 		void ProcessRequests();
 		NS::ReplicationObject Unmap(uint32_t ObjectId);
 
-#ifdef NS_SERVER // All private & server-only functions go here.
-		void Server_SendOutgoingPackets();
+#ifdef NS_SERVER // All private server-only functions go here.
+		void Server_SendPackets();
+		void Server_ReceivePackets();
+		void Server_ProcessRequest(const NetRequest& Request);
 #endif
 
-	private:
-		
-#ifdef NS_CLIENT
-		sf::TcpSocket ServerSocket_;
+#ifdef NS_CLIENT // A private client-only functions go here.
+		void Client_SendPackets();
+		void Client_ReceivePackets();
+		void Client_ProcessRequest(NS::NetRequest Request);
 #endif
+		
+	private: // DATA MEMBERS
+
 #ifdef NS_SERVER
 		sf::TcpListener ListenerSocket_;
 		std::vector<sf::TcpSocket> ConnectedClientSockets_;
+#endif
+
+#ifdef NS_CLIENT // A private client-only functions go here.
+		sf::TcpSocket TCPSocket_;
 #endif
 		
 		static std::unique_ptr<Networking> Instance_;
