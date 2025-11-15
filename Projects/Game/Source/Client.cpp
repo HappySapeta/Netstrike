@@ -12,6 +12,12 @@ int main()
 	NS::Networking* Networking = NS::Networking::Get();
 	const auto& Socket = Networking->TCPConnect(NS::SERVER_ADDRESS, NS::SERVER_PORT);
 	
+	// Activity indiciator square -------
+	sf::RectangleShape Square({100,100});
+	Square.setPosition({NS::SCREEN_WIDTH / 2.0f, NS::SCREEN_HEIGHT / 2.0f});
+	Square.setFillColor(sf::Color::White);
+	// -----------------------------------
+	
 	while (Window.isOpen())
 	{
 		const std::optional<sf::Event> Event = Window.pollEvent();
@@ -23,11 +29,16 @@ int main()
 				Window.close();
 			}
 		}
-
-		Networking->Update();
 		
 		Window.clear();
+		// Activity indicator
+		{
+			Square.rotate(sf::degrees(1.0f));
+			Window.draw(Square);
+		}
 		Window.display();
+		
+		Networking->Update();
 	}
 
 	NSLOG(NS::ELogLevel::WARNING, "Application exiting...");

@@ -30,6 +30,9 @@ sf::TcpSocket& NS::Networking::TCPConnect(const sf::IpAddress& ServerAddress, co
 		NSLOG(NS::ELogLevel::INFO, "Connected successfully to server at {}:{}", ServerAddress.toString(), ServerPort);
 	}
 
+	TCPSocket_.setBlocking(false);
+	Client_Selector_.add(TCPSocket_);
+	
 	return TCPSocket_;
 }
 
@@ -68,17 +71,27 @@ void NS::Networking::Client_SendPackets()
 
 void NS::Networking::Client_ReceivePackets()
 {
+	if (!Client_Selector_.wait(sf::milliseconds(NS::SELECTOR_WAIT_TIME_MS)))
+	{
+		return;	
+	}
+	
+	if (!Client_Selector_.isReady(TCPSocket_))
+	{
+		return;
+	}
+	
 	static bool done = false;
 	sf::Packet Packet;
 	if (!done)
 	{
 		done = true;
 		const auto ReceiveStatus = TCPSocket_.receive(Packet);
-		if (ReceiveStatus != sf::Socket::Status::Done)
+		if (ReceiveStatus == sf::Socket::Status::Error)
 		{
 			NSLOG(LOGERROR, "[CLIENT] Failed to receive packet.");
 		}
-		else 
+		else if (ReceiveStatus == sf::Socket::Status::Done)
 		{
 			NS::NetRequest Request;
 			Packet >> Request;
@@ -120,7 +133,7 @@ sf::TcpListener& NS::Networking::Server_Listen()
 			}
 		
 			Socket.setBlocking(false);
-			Selector_.add(Socket);
+			Server_Selector_.add(Socket);
 			
 			--NumClients;
 		}
@@ -159,14 +172,14 @@ void NS::Networking::Server_ReceivePackets()
 		return;
 	}
 	
-	if (!Selector_.wait(sf::milliseconds(NS::SELECTOR_WAIT_TIME_MS)))
+	if (!Server_Selector_.wait(sf::milliseconds(NS::SELECTOR_WAIT_TIME_MS)))
 	{
 		return;
 	}
 	
 	for (sf::TcpSocket& Socket : ConnectedClientSockets_)
 	{
-		if (!Selector_.isReady(Socket))
+		if (!Server_Selector_.isReady(Socket))
 		{
 			continue;
 		}
