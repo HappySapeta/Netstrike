@@ -105,11 +105,15 @@ sf::TcpListener& NS::Networking::Server_Listen()
 	if (ListenStatus == sf::Socket::Status::Done)
 	{
 		ConnectedClientSockets_.emplace_back();
-		sf::Socket::Status AcceptStatus = ListenerSocket_.accept(ConnectedClientSockets_.back());
+		sf::TcpSocket& Socket = ConnectedClientSockets_.back();
+		sf::Socket::Status AcceptStatus = ListenerSocket_.accept(Socket);
 		if (AcceptStatus != sf::Socket::Status::Done)
 		{
 			NSLOG(NS::ELogLevel::INFO, "Failed to accept connection.");
 		}
+		
+		Socket.setBlocking(false);
+		Selector_.add(Socket);
 	}
 
 	return ListenerSocket_;
@@ -126,14 +130,12 @@ void NS::Networking::Server_SendPackets()
 			if (Request.Reliability == EReliability::RELIABLE)
 			{
 				sf::TcpSocket& Socket = ConnectedClientSockets_.at(Request.InstanceId);
-
 				sf::Packet Packet;
 				Packet << Request;
 				const auto SendStatus = Socket.send(Packet);
-				if (SendStatus != sf::Socket::Status::Done)
+				if (SendStatus == sf::Socket::Status::Error)
 				{
-					NSLOG(ELogLevel::ERROR, "Failed to send packet. {}:{}",
-						  Socket.getRemoteAddress()->toString(), Socket.getRemotePort());
+					NSLOG(ELogLevel::ERROR, "Failed to send packet. {}:{}", Socket.getRemoteAddress()->toString(), Socket.getRemotePort());
 				}
 			}
 		}
@@ -147,18 +149,25 @@ void NS::Networking::Server_ReceivePackets()
 		return;
 	}
 	
-	static bool done = false;
-	sf::Packet Packet;
-	if (!done)
+	if (!Selector_.wait(sf::milliseconds(NS::SELECTOR_WAIT_TIME_MS)))
 	{
-		done = true;
-		auto& ClientSocket = ConnectedClientSockets_.front();
-		const auto ReceiveStatus = ClientSocket.receive(Packet);
-		if (ReceiveStatus != sf::Socket::Status::Done)
+		return;
+	}
+	
+	for (sf::TcpSocket& Socket : ConnectedClientSockets_)
+	{
+		if (!Selector_.isReady(Socket))
+		{
+			continue;
+		}
+		
+		sf::Packet Packet;
+		const auto ReceiveStatus = Socket.receive(Packet);
+		if (ReceiveStatus == sf::Socket::Status::Error)
 		{
 			NSLOG(LOGERROR, "[CLIENT] Failed to receive packet.");
 		}
-		else 
+		else if (ReceiveStatus == sf::Socket::Status::Done)
 		{
 			NS::NetRequest Request;
 			Packet >> Request;

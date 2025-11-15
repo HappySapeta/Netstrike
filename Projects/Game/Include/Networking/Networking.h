@@ -127,6 +127,7 @@ namespace NS
 #ifdef NS_SERVER
 		sf::TcpListener ListenerSocket_;
 		std::vector<sf::TcpSocket> ConnectedClientSockets_;
+		sf::SocketSelector Selector_;
 #endif
 
 #ifdef NS_CLIENT // A private client-only functions go here.
