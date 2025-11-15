@@ -8,19 +8,19 @@
 
 namespace NS
 {
-	enum EReliability : uint8_t
+	enum class EReliability : uint8_t
 	{
 		RELIABLE,
 		UNRELIABLE
 	};
 
-	enum EInstructionType : uint8_t
+	enum class EInstructionType : uint8_t
 	{
 		RPC,
 		REPLICATION
 	};
 
-	enum ENetAuthority : uint8_t
+	enum class ENetAuthority : uint8_t
 	{
 		SERVER,
 		CLIENT
@@ -44,8 +44,8 @@ namespace NS
 
 	inline void operator<<(sf::Packet& Packet, const NS::NetRequest& Request)
 	{
-		Packet << Request.Reliability;
-		Packet << Request.InstructionType;
+		Packet << static_cast<std::underlying_type_t<EReliability>>(Request.Reliability);
+		Packet << static_cast<std::underlying_type_t<EInstructionType>>(Request.InstructionType);
 		Packet << Request.InstanceId;
 		Packet << Request.ObjectId;
 		Packet << Request.Size;

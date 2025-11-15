@@ -176,12 +176,12 @@ void NS::Networking::Server_ReceivePackets()
 
 void NS::Networking::Server_ProcessRequest(const NetRequest& Request)
 {
-	if (Request.InstructionType == REPLICATION)
+	if (Request.InstructionType == EInstructionType::REPLICATION)
 	{
 		return;
 	}
 	
-	if (Request.InstructionType == RPC)
+	if (Request.InstructionType == EInstructionType::RPC)
 	{
 		std::string Message(Request.Data);
 		NSLOG(ELogLevel::INFO, "[SERVER] Received RPC request from client. {}", Message);
