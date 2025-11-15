@@ -99,23 +99,33 @@ void NS::Networking::Client_ReceivePackets()
 // TODO: Use Non-blocking sockets if possible.
 sf::TcpListener& NS::Networking::Server_Listen()
 {
-	ListenerSocket_.close();
-	NSLOG(NS::ELogLevel::INFO, "Listening for connections on port {}", NS::SERVER_PORT);
-	sf::Socket::Status ListenStatus = ListenerSocket_.listen(NS::SERVER_PORT);
-	if (ListenStatus == sf::Socket::Status::Done)
+	int NumClients = NS::DEBUG_SERVER_MAX_CONNECTIONS;
+	while (NumClients > 0)
 	{
-		ConnectedClientSockets_.emplace_back();
-		sf::TcpSocket& Socket = ConnectedClientSockets_.back();
-		sf::Socket::Status AcceptStatus = ListenerSocket_.accept(Socket);
-		if (AcceptStatus != sf::Socket::Status::Done)
+		ListenerSocket_.close();
+		NSLOG(NS::ELogLevel::INFO, "Listening for connections on port {}", NS::SERVER_PORT);
+		sf::Socket::Status ListenStatus = ListenerSocket_.listen(NS::SERVER_PORT);
+		if (ListenStatus == sf::Socket::Status::Done)
 		{
-			NSLOG(NS::ELogLevel::INFO, "Failed to accept connection.");
-		}
+			ConnectedClientSockets_.emplace_back();
+			sf::TcpSocket& Socket = ConnectedClientSockets_.back();
+			sf::Socket::Status AcceptStatus = ListenerSocket_.accept(Socket);
+			if (AcceptStatus != sf::Socket::Status::Done)
+			{
+				NSLOG(NS::ELogLevel::INFO, "Failed to accept connection.");
+			}
+			else
+			{
+				NSLOG(ELogLevel::INFO, "Accepted connection from {}:{}", Socket.getRemoteAddress()->toString(), Socket.getRemotePort());
+			}
 		
-		Socket.setBlocking(false);
-		Selector_.add(Socket);
+			Socket.setBlocking(false);
+			Selector_.add(Socket);
+			
+			--NumClients;
+		}
 	}
-
+	
 	return ListenerSocket_;
 }
 
