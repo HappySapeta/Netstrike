@@ -89,7 +89,6 @@ void NS::Networking::Client_ReceivePackets()
 	while (!IncomingRequests_.empty())
 	{
 		NetRequest Request = IncomingRequests_.front();
-		NSLOG(LOGINFO, "[CLIENT] Processing packet");
 		IncomingRequests_.pop_front();
 		Client_ProcessRequest(Request);
 	}
@@ -170,7 +169,6 @@ void NS::Networking::Server_ReceivePackets()
 	while (!IncomingRequests_.empty())
 	{
 		NetRequest Request = IncomingRequests_.front();
-		NSLOG(LOGINFO, "[SERVER] Processing packet");
 		IncomingRequests_.pop_front();
 		Server_ProcessRequest(Request);
 	}
@@ -181,6 +179,12 @@ void NS::Networking::Server_ProcessRequest(const NetRequest& Request)
 	if (Request.InstructionType == REPLICATION)
 	{
 		return;
+	}
+	
+	if (Request.InstructionType == RPC)
+	{
+		std::string Message(Request.Data);
+		NSLOG(ELogLevel::INFO, "[SERVER] Received RPC request from client. {}", Message);
 	}
 	
 	// perform RPC call.
@@ -201,11 +205,13 @@ void NS::Networking::ProcessRequests()
 {
 	// Populate the queue with incoming requests
 #ifdef NS_CLIENT
+	Client_SendPackets();
 	Client_ReceivePackets();
 #endif
 
 #ifdef NS_SERVER
 	Server_SendPackets();
+	Server_ReceivePackets();
 #endif
 }
 
