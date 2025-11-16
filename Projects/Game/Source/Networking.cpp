@@ -1,5 +1,7 @@
 ﻿#include "Networking/Networking.h"
 
+#include <functional>
+
 #include "GameConfiguration.h"
 #include "Logger.h"
 
@@ -228,9 +230,23 @@ void NS::Networking::PushRequest(const NetRequest& NewRequest)
 	OutgoingRequests_.push_back(NewRequest);
 }
 
-void NS::Networking::Update()
+void NS::Networking::Start()
 {
-	ProcessRequests();
+	NSLOG(ELogLevel::INFO, "Starting network update thread.");
+	NetworkUpdateThread_ = std::thread(std::bind(&NS::Networking::ProcessRequests, this));
+}
+
+void NS::Networking::Stop()
+{
+	if (NetworkUpdateThread_.joinable())
+	{
+		NSLOG(ELogLevel::INFO, "Stopping network update thread.");
+		NetworkUpdateThread_.join();
+	}
+	else
+	{
+		NSLOG(ELogLevel::INFO, "Failed to join network update thread.");
+	}
 }
 
 void NS::Networking::ProcessRequests()

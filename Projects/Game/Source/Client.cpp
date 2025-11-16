@@ -11,6 +11,7 @@ int main()
 
 	NS::Networking* Networking = NS::Networking::Get();
 	const auto& Socket = Networking->TCPConnect(NS::SERVER_ADDRESS, NS::SERVER_PORT);
+	Networking->Start();
 	
 	// Activity indiciator square -------
 	sf::RectangleShape Square({100,100});
@@ -37,10 +38,9 @@ int main()
 			Window.draw(Square);
 		}
 		Window.display();
-		
-		Networking->Update();
 	}
 
+	Networking->Stop();
 	NSLOG(NS::ELogLevel::WARNING, "Application exiting...");
 	return 0;
 }

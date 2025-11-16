@@ -33,6 +33,7 @@ int main()
 	}
 
 	Networking->PushRequest(Request);
+	Networking->Start();
 
 	while (true)
 	{
@@ -40,8 +41,6 @@ int main()
 		TickStart = HRClock::now();
 		
 		Engine.Update(0.016f);
-		Networking->Update();
-
 
 		Duration TickDuration = HRClock::now() - TickStart;
 		DeltaTimeSecs = TickDuration.count();
@@ -53,6 +52,7 @@ int main()
 			std::this_thread::sleep_for(std::chrono::milliseconds(TimeToWaitMs));
 		}
 	}
-
+	
+	Networking->Stop();
 	return 0;
 }  

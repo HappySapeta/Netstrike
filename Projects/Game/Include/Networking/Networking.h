@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <deque>
 #include <memory>
+#include <thread>
 #include <unordered_map>
 #include <SFML/Network.hpp>
 
@@ -88,7 +89,8 @@ namespace NS
 		Networking& operator=(Networking&&) = delete;
 		
 		void PushRequest(const NetRequest& NewRequest);
-		void Update();
+		void Start();
+		void Stop();
 
 	public:
 
@@ -141,5 +143,7 @@ namespace NS
 		std::deque<NetRequest> IncomingRequests_;
 		std::deque<NetRequest> OutgoingRequests_;
 		std::unordered_map<uint32_t, ReplicationObject> ReplObjectMap_;
+		
+		std::thread NetworkUpdateThread_;
 	};
 }
