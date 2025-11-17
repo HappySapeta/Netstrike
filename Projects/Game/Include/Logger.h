@@ -31,10 +31,10 @@ namespace NS
     };
 
     template <class... Args>
-	void GLogInternal(const ELogLevel Level, const char* FileName, const int LineNum , const std::format_string<Args...> Format, Args... Arguments)
+	void GLogInternal(const ELogLevel Level, const char* FuncName , const std::format_string<Args...> Format, Args... Arguments)
     {
         const std::string FormattedMessage = std::vformat(Format.get(), std::make_format_args(Arguments...));
-        std::cout << G_LOGLEVEL_COLOR.at(Level) << G_LOGLEVEL_TOSTRING.at(Level) << " : [" << FileName << " Ln " << LineNum << "] : " << FormattedMessage << "\033[0m\n";
+        std::cout << G_LOGLEVEL_COLOR.at(Level) << G_LOGLEVEL_TOSTRING.at(Level) << " : [" << FuncName << "] : " << FormattedMessage << "\033[0m\n";
     }
 }
 
@@ -42,5 +42,5 @@ namespace NS
 #define LOGWARN NS::ELogLevel::WARNING
 #define LOGERROR NS::ELogLevel::ERROR
 #define LOGFATAL NS::ELogLevel::FATAL
-#define NSLOG(loglevel, format, ...) NS::GLogInternal(loglevel, __FILE__, __LINE__ ,format, ##__VA_ARGS__);
+#define NSLOG(loglevel, format, ...) NS::GLogInternal(loglevel, __FUNCTION__, format, ##__VA_ARGS__);
 #pragma once
