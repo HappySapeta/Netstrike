@@ -226,6 +226,7 @@ void NS::Networking::Start()
 
 void NS::Networking::Stop()
 {
+	StopRequested = true;
 	if (NetworkUpdateThread_.joinable())
 	{
 		NSLOG(ELogLevel::INFO, "Stopping network update thread.");
@@ -239,16 +240,19 @@ void NS::Networking::Stop()
 
 void NS::Networking::ProcessRequests()
 {
-	// Populate the queue with incoming requests
+	while (!StopRequested)
+	{
+		// Populate the queue with incoming requests
 #ifdef NS_CLIENT
-	Client_SendPackets();
-	Client_ReceivePackets();
+		Client_SendPackets();
+		Client_ReceivePackets();
 #endif
 
 #ifdef NS_SERVER
-	Server_SendPackets();
-	Server_ReceivePackets();
+		Server_SendPackets();
+		Server_ReceivePackets();
 #endif
+	}
 }
 
 NS::ReplicationObject NS::Networking::Unmap(uint32_t ObjectId)

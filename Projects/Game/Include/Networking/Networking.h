@@ -141,5 +141,6 @@ namespace NS
 		std::unordered_map<uint32_t, ReplicationObject> ReplObjectMap_;
 		
 		std::thread NetworkUpdateThread_;
+		bool StopRequested = false;
 	};
 }
