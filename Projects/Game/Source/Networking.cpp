@@ -119,19 +119,22 @@ void NS::Networking::Server_Listen()
 	int NumClients = NS::DEBUG_SERVER_MAX_CONNECTIONS;
 	while (NumClients > 0)
 	{
-		sf::TcpSocket Socket;
-		sf::Socket::Status AcceptStatus = ListenerSocket_.accept(Socket);
+		ConnectedClientSockets_.emplace_back(std::make_unique<sf::TcpSocket>());
+		sf::TcpSocket& NewSocket = *ConnectedClientSockets_.back();
+		
+		sf::Socket::Status AcceptStatus = ListenerSocket_.accept(NewSocket);
 		if (AcceptStatus != sf::Socket::Status::Done)
 		{
+			ConnectedClientSockets_.pop_back();
 			NSLOG(NS::ELogLevel::INFO, "Failed to accept connection.");
 		}
 		else
 		{
-			NSLOG(ELogLevel::INFO, "Accepted connection from {}:{}", Socket.getRemoteAddress()->toString(), Socket.getRemotePort());
-			Socket.setBlocking(false);
-			Server_Selector_.add(Socket);
-			ConnectedClientSockets_.emplace_back(std::move(Socket));
+			NewSocket.setBlocking(false);
+			Server_Selector_.add(NewSocket);
+			
 			--NumClients;
+			NSLOG(ELogLevel::INFO, "Accepted connection from {}:{}", NewSocket.getRemoteAddress()->toString(), NewSocket.getRemotePort());
 		}
 	}
 }
@@ -146,7 +149,7 @@ void NS::Networking::Server_SendPackets()
 		{
 			if (Request.Reliability == EReliability::RELIABLE)
 			{
-				sf::TcpSocket& Socket = ConnectedClientSockets_.at(Request.InstanceId);
+				sf::TcpSocket& Socket = *ConnectedClientSockets_.at(Request.InstanceId);
 				sf::Packet Packet;
 				Packet << Request;
 				const auto SendStatus = Socket.send(Packet);
@@ -163,15 +166,15 @@ void NS::Networking::Server_ReceivePackets()
 {
 	if (Server_Selector_.wait(sf::milliseconds(NS::SERVER_SELECTOR_WAIT_TIME_MS)))
 	{
-		for (sf::TcpSocket& Socket : ConnectedClientSockets_)
+		for (auto& SocketPtr : ConnectedClientSockets_)
 		{
-			if (!Server_Selector_.isReady(Socket))
+			if (!Server_Selector_.isReady(*SocketPtr))
 			{
 				continue;
 			}
 		
 			sf::Packet Packet;
-			const auto ReceiveStatus = Socket.receive(Packet);
+			const auto ReceiveStatus = SocketPtr->receive(Packet);
 			if (ReceiveStatus == sf::Socket::Status::Error)
 			{
 				NSLOG(LOGERROR, "[CLIENT] Failed to receive packet.");

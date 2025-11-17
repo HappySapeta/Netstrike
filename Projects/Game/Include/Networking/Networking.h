@@ -100,10 +100,6 @@ namespace NS
 
 #ifdef NS_SERVER // All public server-only functions go here.
 		void Server_Listen();
-		std::vector<sf::TcpSocket>& GetClientSockets()
-		{
-			return ConnectedClientSockets_;
-		}
 #endif
 
 	private:
@@ -128,7 +124,7 @@ namespace NS
 
 #ifdef NS_SERVER
 		sf::TcpListener ListenerSocket_;
-		std::vector<sf::TcpSocket> ConnectedClientSockets_;
+		std::vector<std::unique_ptr<sf::TcpSocket>> ConnectedClientSockets_;
 		sf::SocketSelector Server_Selector_;
 #endif
 
