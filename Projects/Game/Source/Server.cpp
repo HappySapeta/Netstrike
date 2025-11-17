@@ -16,7 +16,7 @@ static float DeltaTimeSecs = 0.016f;
 int main()
 {
 	NS::Networking* Networking = NS::Networking::Get();
-	const auto& Socket = Networking->Server_Listen();
+	Networking->Server_Listen();
 
 	char Data[NS::PACKET_SIZE];
 	const char* Message = "Hello World!";

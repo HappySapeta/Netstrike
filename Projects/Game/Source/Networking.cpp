@@ -85,6 +85,7 @@ void NS::Networking::Client_ReceivePackets()
 			}
 			else if (ReceiveStatus == sf::Socket::Status::Done)
 			{
+				NSLOG(LOGINFO, "[CLIENT] Received packet from server.");
 				NS::NetRequest Request;
 				Packet >> Request;
 				IncomingRequests_.emplace_back(Request);
@@ -103,36 +104,36 @@ void NS::Networking::Client_ReceivePackets()
 
 #ifdef NS_SERVER
 // TODO: Use Non-blocking sockets if possible.
-sf::TcpListener& NS::Networking::Server_Listen()
+void NS::Networking::Server_Listen()
 {
+	ListenerSocket_.close();
+	NSLOG(NS::ELogLevel::INFO, "Listening for connections on port {}", NS::SERVER_PORT);
+	const sf::Socket::Status ListenStatus = ListenerSocket_.listen(NS::SERVER_PORT);
+	
+	if (ListenStatus != sf::Socket::Status::Done)
+	{
+		NSLOG(ELogLevel::ERROR, "[SERVER] Failed to listen on port {}.", NS::SERVER_PORT);
+		return;
+	}
+
 	int NumClients = NS::DEBUG_SERVER_MAX_CONNECTIONS;
 	while (NumClients > 0)
 	{
-		ListenerSocket_.close();
-		NSLOG(NS::ELogLevel::INFO, "Listening for connections on port {}", NS::SERVER_PORT);
-		sf::Socket::Status ListenStatus = ListenerSocket_.listen(NS::SERVER_PORT);
-		if (ListenStatus == sf::Socket::Status::Done)
+		sf::TcpSocket Socket;
+		sf::Socket::Status AcceptStatus = ListenerSocket_.accept(Socket);
+		if (AcceptStatus != sf::Socket::Status::Done)
 		{
-			ConnectedClientSockets_.emplace_back();
-			sf::TcpSocket& Socket = ConnectedClientSockets_.back();
-			sf::Socket::Status AcceptStatus = ListenerSocket_.accept(Socket);
-			if (AcceptStatus != sf::Socket::Status::Done)
-			{
-				NSLOG(NS::ELogLevel::INFO, "Failed to accept connection.");
-			}
-			else
-			{
-				NSLOG(ELogLevel::INFO, "Accepted connection from {}:{}", Socket.getRemoteAddress()->toString(), Socket.getRemotePort());
-			}
-		
+			NSLOG(NS::ELogLevel::INFO, "Failed to accept connection.");
+		}
+		else
+		{
+			NSLOG(ELogLevel::INFO, "Accepted connection from {}:{}", Socket.getRemoteAddress()->toString(), Socket.getRemotePort());
 			Socket.setBlocking(false);
 			Server_Selector_.add(Socket);
-			
+			ConnectedClientSockets_.emplace_back(std::move(Socket));
 			--NumClients;
 		}
 	}
-	
-	return ListenerSocket_;
 }
 
 void NS::Networking::Server_SendPackets()
