@@ -6,6 +6,7 @@
 #include <SFML/Network.hpp>
 
 #include "GameConfiguration.h"
+#include "Logger.h"
 
 namespace NS
 {
@@ -27,6 +28,12 @@ namespace NS
 		CLIENT
 	};
 
+	struct NetClient
+	{
+		sf::TcpSocket Socket;
+		uint16_t ClientId;
+	};
+	
 	struct NetRequest
 	{
 		EReliability Reliability;
@@ -124,7 +131,7 @@ namespace NS
 
 #ifdef NS_SERVER
 		sf::TcpListener ListenerSocket_;
-		std::vector<std::unique_ptr<sf::TcpSocket>> ConnectedClientSockets_;
+		std::vector<std::unique_ptr<NetClient>> ConnectedClients_;
 		sf::SocketSelector Server_Selector_;
 #endif
 
