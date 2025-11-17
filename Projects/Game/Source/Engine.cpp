@@ -1,5 +1,4 @@
 ﻿#include "Engine/Engine.h"
-#include "Actor/Actor.h"
 
 void NS::Engine::DestroyActor(Actor* ActorToDestroy)
 {

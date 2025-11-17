@@ -1,12 +1,11 @@
 ﻿#include <chrono>
 #include <thread>
+
 #include "GameConfiguration.h"
-#include "Logger.h"
-#include "Tank.h"
 #include "Engine/Engine.h"
+#include <Networking/Networking.h>
 
 static NS::Engine Engine;
-static NS::Tank* Tank = nullptr;
 
 using HRClock = std::chrono::high_resolution_clock;
 using TimePoint = std::chrono::high_resolution_clock::time_point;
@@ -16,16 +15,33 @@ static float DeltaTimeSecs = 0.016f;
 
 int main()
 {
-	Tank = Engine.CreateActor<NS::Tank>();
-	Tank->SetActorLocation({NS::SCREEN_WIDTH * 0.5f, NS::SCREEN_HEIGHT * 0.5f});
-	
+	NS::Networking* Networking = NS::Networking::Get();
+	Networking->Server_Listen();
+
+	char Data[NS::PACKET_SIZE];
+	const char* Message = "Hello World!";
+	strncpy_s(Data, NS::PACKET_SIZE, Message, NS::PACKET_SIZE);
+
+	NS::NetRequest Request;
+	{
+		Request.Reliability = NS::EReliability::RELIABLE;
+		Request.InstructionType = NS::EInstructionType::REPLICATION;
+		Request.InstanceId = 0;
+		Request.ObjectId = 0;
+		Request.Size = NS::PACKET_SIZE;
+		memcpy_s(Request.Data, NS::PACKET_SIZE, Data, NS::PACKET_SIZE);
+	}
+
+	Networking->PushRequest(Request);
+	Networking->Start();
+
 	while (true)
 	{
 		static TimePoint TickStart;
 		TickStart = HRClock::now();
 		
 		Engine.Update(0.016f);
-		
+
 		Duration TickDuration = HRClock::now() - TickStart;
 		DeltaTimeSecs = TickDuration.count();
 
@@ -35,10 +51,8 @@ int main()
 		{
 			std::this_thread::sleep_for(std::chrono::milliseconds(TimeToWaitMs));
 		}
-
-		Duration DelayedDuration = HRClock::now() - TickStart;
-		NSLOG(NS::ELogLevel::INFO, "DeltaTime | Actual = {}, Delayed = {}.", TickDuration.count(), DelayedDuration.count());
 	}
-
+	
+	Networking->Stop();
 	return 0;
 }  
