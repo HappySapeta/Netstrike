@@ -73,7 +73,7 @@ void NS::Networking::Client_SendPackets()
 
 void NS::Networking::Client_ReceivePackets()
 {
-	if (!Client_Selector_.wait(sf::milliseconds(NS::SELECTOR_WAIT_TIME_MS)))
+	if (!Client_Selector_.wait(sf::milliseconds(NS::CLIENT_SELECTOR_WAIT_TIME_MS)))
 	{
 		return;	
 	}
@@ -174,7 +174,7 @@ void NS::Networking::Server_ReceivePackets()
 		return;
 	}
 	
-	if (!Server_Selector_.wait(sf::milliseconds(NS::SELECTOR_WAIT_TIME_MS)))
+	if (!Server_Selector_.wait(sf::milliseconds(NS::SERVER_SELECTOR_WAIT_TIME_MS)))
 	{
 		return;
 	}
