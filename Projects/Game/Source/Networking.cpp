@@ -73,31 +73,22 @@ void NS::Networking::Client_SendPackets()
 
 void NS::Networking::Client_ReceivePackets()
 {
-	if (!Client_Selector_.wait(sf::milliseconds(NS::CLIENT_SELECTOR_WAIT_TIME_MS)))
+	if (Client_Selector_.wait(sf::milliseconds(NS::CLIENT_SELECTOR_WAIT_TIME_MS)))
 	{
-		return;	
-	}
-	
-	if (!Client_Selector_.isReady(TCPSocket_))
-	{
-		return;
-	}
-	
-	static bool done = false;
-	sf::Packet Packet;
-	if (!done)
-	{
-		done = true;
-		const auto ReceiveStatus = TCPSocket_.receive(Packet);
-		if (ReceiveStatus == sf::Socket::Status::Error)
+		if (Client_Selector_.isReady(TCPSocket_))
 		{
-			NSLOG(LOGERROR, "[CLIENT] Failed to receive packet.");
-		}
-		else if (ReceiveStatus == sf::Socket::Status::Done)
-		{
-			NS::NetRequest Request;
-			Packet >> Request;
-			IncomingRequests_.emplace_back(Request);
+			sf::Packet Packet;
+			const auto ReceiveStatus = TCPSocket_.receive(Packet);
+			if (ReceiveStatus == sf::Socket::Status::Error)
+			{
+				NSLOG(LOGERROR, "[CLIENT] Failed to receive packet.");
+			}
+			else if (ReceiveStatus == sf::Socket::Status::Done)
+			{
+				NS::NetRequest Request;
+				Packet >> Request;
+				IncomingRequests_.emplace_back(Request);
+			}
 		}
 	}
 		
@@ -169,34 +160,27 @@ void NS::Networking::Server_SendPackets()
 
 void NS::Networking::Server_ReceivePackets()
 {
-	if (ConnectedClientSockets_.empty())
+	if (Server_Selector_.wait(sf::milliseconds(NS::SERVER_SELECTOR_WAIT_TIME_MS)))
 	{
-		return;
-	}
-	
-	if (!Server_Selector_.wait(sf::milliseconds(NS::SERVER_SELECTOR_WAIT_TIME_MS)))
-	{
-		return;
-	}
-	
-	for (sf::TcpSocket& Socket : ConnectedClientSockets_)
-	{
-		if (!Server_Selector_.isReady(Socket))
+		for (sf::TcpSocket& Socket : ConnectedClientSockets_)
 		{
-			continue;
-		}
+			if (!Server_Selector_.isReady(Socket))
+			{
+				continue;
+			}
 		
-		sf::Packet Packet;
-		const auto ReceiveStatus = Socket.receive(Packet);
-		if (ReceiveStatus == sf::Socket::Status::Error)
-		{
-			NSLOG(LOGERROR, "[CLIENT] Failed to receive packet.");
-		}
-		else if (ReceiveStatus == sf::Socket::Status::Done)
-		{
-			NS::NetRequest Request;
-			Packet >> Request;
-			IncomingRequests_.emplace_back(Request);
+			sf::Packet Packet;
+			const auto ReceiveStatus = Socket.receive(Packet);
+			if (ReceiveStatus == sf::Socket::Status::Error)
+			{
+				NSLOG(LOGERROR, "[CLIENT] Failed to receive packet.");
+			}
+			else if (ReceiveStatus == sf::Socket::Status::Done)
+			{
+				NS::NetRequest Request;
+				Packet >> Request;
+				IncomingRequests_.emplace_back(Request);
+			}
 		}
 	}
 		
