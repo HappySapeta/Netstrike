@@ -3,14 +3,22 @@
 #include "GameConfiguration.h"
 #include "Logger.h"
 #include "Networking/Networking.h"
+#include "Test/ReplicationTest.h"
+
 
 int main()
 {
+	NS::ReplicationTest Test;
+	
+	
 	sf::RenderWindow Window(sf::VideoMode({NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT}), "!! N E T S T R I K E !!");
 	NSLOG(NS::ELogLevel::INFO, "Created a new window!");
 
 	NS::Networking* Networking = NS::Networking::Get();
-	const auto& Socket = Networking->TCPConnect(NS::SERVER_ADDRESS, NS::SERVER_PORT);
+	Networking->TCPConnect(NS::SERVER_ADDRESS, NS::SERVER_PORT);
+	
+	
+	Networking->Client_ReplicateFromServer(&Test.Variable, sizeof(Test.Variable), 0);
 	Networking->Start();
 	
 	// Activity indiciator square -------
@@ -37,10 +45,14 @@ int main()
 			Square.rotate(sf::degrees(1.0f));
 			Window.draw(Square);
 		}
+		
+		NSLOG(NS::ELogLevel::INFO, "[CLIENT] Test.Variable = {}", Test.Variable);
 		Window.display();
 	}
 
 	Networking->Stop();
 	NSLOG(NS::ELogLevel::WARNING, "Application exiting...");
+	
+	std::cin.get();
 	return 0;
 }

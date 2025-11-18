@@ -40,7 +40,7 @@ namespace NS
 		EInstructionType InstructionType;
 		uint8_t InstanceId;
 		uint32_t ObjectId;
-		uint64_t Size;
+		uint16_t Size;
 		char Data[NS::PACKET_SIZE];
 	};
 
@@ -102,11 +102,13 @@ namespace NS
 	public:
 
 #ifdef NS_CLIENT // A public client-only functions go here.
-		[[nodiscard]] sf::TcpSocket& TCPConnect(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
+		void TCPConnect(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
+		void Client_ReplicateFromServer(void* Data, uint16_t Size, uint32_t ObjectId);
 #endif
 
 #ifdef NS_SERVER // All public server-only functions go here.
 		void Server_Listen();
+		void Server_ReplicateToClient(const void* Data, uint16_t Size, uint32_t ObjectId, uint8_t ClientId);
 #endif
 
 	private:
@@ -121,7 +123,7 @@ namespace NS
 		void Server_ProcessRequest(const NetRequest& Request);
 #endif
 
-#ifdef NS_CLIENT // A private client-only functions go here.
+#ifdef NS_CLIENT // All private client-only functions go here.
 		void Client_SendPackets();
 		void Client_ReceivePackets();
 		void Client_ProcessRequest(NS::NetRequest Request);

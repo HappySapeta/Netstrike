@@ -19,7 +19,7 @@ NS::Networking::Networking()
 
 #ifdef NS_CLIENT
 // TODO: Use Non-blocking sockets if possible.
-sf::TcpSocket& NS::Networking::TCPConnect(const sf::IpAddress& ServerAddress, const uint16_t ServerPort)
+void NS::Networking::TCPConnect(const sf::IpAddress& ServerAddress, const uint16_t ServerPort)
 {
 	TCPSocket_.disconnect();
 	const auto ConnectStatus = TCPSocket_.connect(ServerAddress, ServerPort, sf::seconds(NS::DEFAULT_CONNECTION_TIMEOUT));
@@ -34,8 +34,6 @@ sf::TcpSocket& NS::Networking::TCPConnect(const sf::IpAddress& ServerAddress, co
 
 	TCPSocket_.setBlocking(false);
 	Client_Selector_.add(TCPSocket_);
-	
-	return TCPSocket_;
 }
 
 void NS::Networking::Client_ProcessRequest(NS::NetRequest Request)
@@ -46,6 +44,10 @@ void NS::Networking::Client_ProcessRequest(NS::NetRequest Request)
 		if (ReplObject.DataPtr)
 		{
 			memcpy(ReplObject.DataPtr, Request.Data, ReplObject.Size);
+		}
+		else
+		{
+			NSLOG(ELogLevel::ERROR, "[CLIENT] Failed to unmap ObjectId {}.", Request.ObjectId);
 		}
 	}
 }
@@ -65,7 +67,7 @@ void NS::Networking::Client_SendPackets()
 			const auto SendStatus = TCPSocket_.send(Packet);
 			if (SendStatus != sf::Socket::Status::Done)
 			{
-				NSLOG(ELogLevel::ERROR, "Failed to send packet to server!");
+				NSLOG(ELogLevel::ERROR, "[CLIENT] Failed to send packet to server!");
 			}
 		}
 	}
@@ -100,6 +102,12 @@ void NS::Networking::Client_ReceivePackets()
 		Client_ProcessRequest(Request);
 	}
 }
+
+void NS::Networking::Client_ReplicateFromServer(void* Data, uint16_t Size, const uint32_t ObjectId)
+{
+	ReplObjectMap_[ObjectId] = {Data, Size};
+}
+
 #endif
 
 #ifdef NS_SERVER
@@ -126,7 +134,7 @@ void NS::Networking::Server_Listen()
 		if (AcceptStatus != sf::Socket::Status::Done)
 		{
 			ConnectedClients_.pop_back();
-			NSLOG(NS::ELogLevel::INFO, "Failed to accept connection.");
+			NSLOG(NS::ELogLevel::INFO, "[SERVER] Failed to accept connection.");
 		}
 		else
 		{
@@ -135,7 +143,7 @@ void NS::Networking::Server_Listen()
 			Server_Selector_.add(NewClient->Socket);
 			
 			--NumClients;
-			NSLOG(ELogLevel::INFO, "Accepted connection from {}:{}", 
+			NSLOG(ELogLevel::INFO, "[SERVER] Accepted connection from {}:{}", 
 				NewClient->Socket.getRemoteAddress()->toString(),
 				NewClient->Socket.getRemotePort());
 		}
@@ -148,7 +156,6 @@ void NS::Networking::Server_SendPackets()
 	{
 		NetRequest Request = OutgoingRequests_.front();
 		OutgoingRequests_.pop_front();
-		NSLOG(LOGINFO, "[SERVER] Sending packet");
 		{
 			if (Request.Reliability == EReliability::RELIABLE)
 			{
@@ -158,7 +165,7 @@ void NS::Networking::Server_SendPackets()
 				const auto SendStatus = Socket.send(Packet);
 				if (SendStatus == sf::Socket::Status::Error)
 				{
-					NSLOG(ELogLevel::ERROR, "Failed to send packet. {}:{}", Socket.getRemoteAddress()->toString(), Socket.getRemotePort());
+					NSLOG(ELogLevel::ERROR, "[SERVER] Failed to send packet. {}:{}", Socket.getRemoteAddress()->toString(), Socket.getRemotePort());
 				}
 			}
 		}
@@ -213,6 +220,19 @@ void NS::Networking::Server_ProcessRequest(const NetRequest& Request)
 	}
 	
 	// perform RPC call.
+}
+
+void NS::Networking::Server_ReplicateToClient(const void* Data, const uint16_t Size, const uint32_t ObjectId, uint8_t ClientId)
+{
+	NS::NetRequest RepRequest;
+	RepRequest.ObjectId = ObjectId;
+	RepRequest.Size = Size;
+	RepRequest.InstanceId = ClientId;
+	memcpy(RepRequest.Data, Data, NS::PACKET_SIZE);
+	RepRequest.Reliability = EReliability::RELIABLE;
+	RepRequest.InstructionType = EInstructionType::REPLICATION;
+	
+	PushRequest(RepRequest);
 }
 #endif
 
