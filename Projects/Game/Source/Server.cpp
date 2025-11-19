@@ -18,6 +18,8 @@ static float DeltaTimeSecs = 0.016f;
 int main()
 {
 	NS::ReplicationTest Test;
+	Test.Variable = 25.2345f;
+	
 	NS::Networking* Networking = NS::Networking::Get();
 	Networking->Server_Listen();
 

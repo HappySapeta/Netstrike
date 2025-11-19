@@ -57,7 +57,8 @@ namespace NS
 		Packet << Request.InstanceId;
 		Packet << Request.ObjectId;
 		Packet << Request.Size;
-		Packet << Request.Data;
+		
+		Packet.append(Request.Data, sizeof(Request.Data));
 	}
 
 	inline void operator>>(sf::Packet& Packet, NS::NetRequest& Request)
@@ -73,7 +74,8 @@ namespace NS
 		Packet >> Request.InstanceId;
 		Packet >> Request.ObjectId;
 		Packet >> Request.Size;
-		Packet >> Request.Data;
+		
+		memcpy(Request.Data, static_cast<const char*>(Packet.getData()) + Packet.getReadPosition(), sizeof(Request.Data));
 	}
 	
 	class Networking
