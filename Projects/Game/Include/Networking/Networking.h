@@ -107,6 +107,8 @@ namespace NS
 		void Start();
 		void Stop();
 
+		void AddReplicateProps(const std::vector<ReplicatedProp>& Props);
+		
 	public:
 
 #ifdef NS_CLIENT // A public client-only functions go here.
@@ -136,7 +138,7 @@ namespace NS
 		void Client_ReceivePackets();
 		void Client_ProcessRequest(NS::NetRequest Request);
 #endif
-		
+	
 	private: // DATA MEMBERS
 
 #ifdef NS_SERVER
@@ -151,6 +153,7 @@ namespace NS
 #endif
 		
 		static std::unique_ptr<Networking> Instance_;
+		
 		const ENetAuthority NetIdentity_;
 
 		std::deque<NetRequest> IncomingRequests_;
@@ -159,5 +162,7 @@ namespace NS
 		
 		std::thread NetworkUpdateThread_;
 		bool StopRequested = false;
+		
+		std::vector<ReplicatedProp> ReplicatedProps_;
 	};
 }

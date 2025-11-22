@@ -3,7 +3,6 @@
 
 #include "GameConfiguration.h"
 #include "Engine/Engine.h"
-#include <Networking/Networking.h>
 
 static NS::Engine Engine;
 
@@ -15,10 +14,8 @@ static float DeltaTimeSecs = 0.016f;
 
 int main()
 {
-	NS::Networking* Networking = NS::Networking::Get();
-	Networking->Server_Listen();
-	Networking->Start();
-
+	Engine.StartSubsystems();
+	
 	while (true)
 	{
 		static TimePoint TickStart;
@@ -37,6 +34,6 @@ int main()
 		}
 	}
 	
-	Networking->Stop();
+	Engine.StopSubsystems();
 	return 0;
 }  

@@ -261,6 +261,11 @@ void NS::Networking::Stop()
 	}
 }
 
+void NS::Networking::AddReplicateProps(const std::vector<ReplicatedProp>& Props)
+{
+	ReplicatedProps_.insert(ReplicatedProps_.end(), Props.begin(), Props.end());
+}
+
 void NS::Networking::ProcessRequests()
 {
 	while (!StopRequested)
