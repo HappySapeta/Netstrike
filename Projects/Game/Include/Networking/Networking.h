@@ -10,16 +10,12 @@
 
 namespace NS
 {
+	typedef uint32_t IdentifierType;
+	
 	enum class EReliability : uint8_t
 	{
 		RELIABLE,
 		UNRELIABLE
-	};
-
-	enum class EInstructionType : uint8_t
-	{
-		RPC,
-		REPLICATION
 	};
 
 	enum class ENetAuthority : uint8_t
@@ -31,23 +27,24 @@ namespace NS
 	struct NetClient
 	{
 		sf::TcpSocket Socket;
-		uint16_t ClientId;
+		IdentifierType ClientId;
 	};
 	
-	struct NetRequest
+	struct NetPacket
 	{
 		EReliability Reliability;
-		EInstructionType InstructionType;
-		uint8_t InstanceId;
-		uint32_t ObjectId;
-		uint16_t Size;
+		IdentifierType InstanceId;
+		IdentifierType ObjectId;
+		size_t Size;
 		char Data[NS::PACKET_SIZE];
 	};
 	
 	struct ReplicatedProp
 	{
 		void* Ptr;
-		uint16_t Size;
+		size_t Size;
+		IdentifierType ActorId;
+		IdentifierType ObjectId;
 	};
 
 	struct ReplicationObject
@@ -56,10 +53,9 @@ namespace NS
 		uint32_t Size;
 	};
 
-	inline void operator<<(sf::Packet& Packet, const NS::NetRequest& Request)
+	inline void operator<<(sf::Packet& Packet, const NS::NetPacket& Request)
 	{
 		Packet << static_cast<std::underlying_type_t<EReliability>>(Request.Reliability);
-		Packet << static_cast<std::underlying_type_t<EInstructionType>>(Request.InstructionType);
 		Packet << Request.InstanceId;
 		Packet << Request.ObjectId;
 		Packet << Request.Size;
@@ -67,15 +63,12 @@ namespace NS
 		Packet.append(Request.Data, sizeof(Request.Data));
 	}
 
-	inline void operator>>(sf::Packet& Packet, NS::NetRequest& Request)
+	inline void operator>>(sf::Packet& Packet, NS::NetPacket& Request)
 	{
 		uint8_t Byte;
 		
 		Packet >> Byte;
 		Request.Reliability = static_cast<NS::EReliability>(Byte);
-	
-		Packet >> Byte;
-		Request.InstructionType = static_cast<NS::EInstructionType>(Byte);
 	
 		Packet >> Request.InstanceId;
 		Packet >> Request.ObjectId;
@@ -123,7 +116,7 @@ namespace NS
 		Networking();
 		void Start();
 		void Stop();
-		void PushRequest(const NetRequest& NewRequest);
+		void PushRequest(const NetPacket& NewRequest);
 		void ProcessRequests();
 		void AddReplicateProps(const std::vector<ReplicatedProp>& Props);
 		NS::ReplicationObject Unmap(uint32_t ObjectId);
@@ -131,13 +124,13 @@ namespace NS
 #ifdef NS_SERVER // All private server-only functions go here.
 		void Server_SendPackets();
 		void Server_ReceivePackets();
-		void Server_ProcessRequest(const NetRequest& Request);
+		void Server_ProcessRequest(const NetPacket& Request);
 #endif
 
 #ifdef NS_CLIENT // All private client-only functions go here.
 		void Client_SendPackets();
 		void Client_ReceivePackets();
-		void Client_ProcessRequest(NS::NetRequest Request);
+		void Client_ProcessRequest(NS::NetPacket Request);
 #endif
 	
 	private: // DATA MEMBERS
@@ -157,8 +150,8 @@ namespace NS
 		
 		const ENetAuthority NetIdentity_;
 
-		std::deque<NetRequest> IncomingRequests_;
-		std::deque<NetRequest> OutgoingRequests_;
+		std::deque<NetPacket> IncomingRequests_;
+		std::deque<NetPacket> OutgoingRequests_;
 		std::unordered_map<uint32_t, ReplicationObject> ReplObjectMap_;
 		
 		std::thread NetworkUpdateThread_;

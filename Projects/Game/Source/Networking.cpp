@@ -36,19 +36,16 @@ void NS::Networking::TCPConnect(const sf::IpAddress& ServerAddress, const uint16
 	Client_Selector_.add(TCPSocket_);
 }
 
-void NS::Networking::Client_ProcessRequest(NS::NetRequest Request)
+void NS::Networking::Client_ProcessRequest(NS::NetPacket Request)
 {
-	if (Request.InstructionType == EInstructionType::REPLICATION)
+	const ReplicationObject& ReplObject = Unmap(Request.ObjectId);
+	if (ReplObject.DataPtr)
 	{
-		const ReplicationObject& ReplObject = Unmap(Request.ObjectId);
-		if (ReplObject.DataPtr)
-		{
-			memcpy(ReplObject.DataPtr, Request.Data, ReplObject.Size);
-		}
-		else
-		{
-			NSLOG(ELogLevel::ERROR, "[CLIENT] Failed to unmap ObjectId {}.", Request.ObjectId);
-		}
+		memcpy(ReplObject.DataPtr, Request.Data, ReplObject.Size);
+	}
+	else
+	{
+		NSLOG(ELogLevel::ERROR, "[CLIENT] Failed to unmap ObjectId {}.", Request.ObjectId);
 	}
 }
 
@@ -56,7 +53,7 @@ void NS::Networking::Client_SendPackets()
 {
 	while (!OutgoingRequests_.empty())
 	{
-		NS::NetRequest Request = OutgoingRequests_.front();
+		NS::NetPacket Request = OutgoingRequests_.front();
 		OutgoingRequests_.pop_front();
 		
 		sf::Packet Packet;
@@ -88,7 +85,7 @@ void NS::Networking::Client_ReceivePackets()
 			else if (ReceiveStatus == sf::Socket::Status::Done)
 			{
 				NSLOG(LOGINFO, "[CLIENT] Received packet from server.");
-				NS::NetRequest Request;
+				NS::NetPacket Request;
 				Packet >> Request;
 				IncomingRequests_.emplace_back(Request);
 			}
@@ -97,7 +94,7 @@ void NS::Networking::Client_ReceivePackets()
 		
 	while (!IncomingRequests_.empty())
 	{
-		NetRequest Request = IncomingRequests_.front();
+		NetPacket Request = IncomingRequests_.front();
 		IncomingRequests_.pop_front();
 		Client_ProcessRequest(Request);
 	}
@@ -154,7 +151,7 @@ void NS::Networking::Server_SendPackets()
 {
 	while (!OutgoingRequests_.empty())
 	{
-		NetRequest Request = OutgoingRequests_.front();
+		NetPacket Request = OutgoingRequests_.front();
 		OutgoingRequests_.pop_front();
 		{
 			if (Request.Reliability == EReliability::RELIABLE)
@@ -191,7 +188,7 @@ void NS::Networking::Server_ReceivePackets()
 			}
 			else if (ReceiveStatus == sf::Socket::Status::Done)
 			{
-				NS::NetRequest Request;
+				NS::NetPacket Request;
 				Packet >> Request;
 				IncomingRequests_.emplace_back(Request);
 			}
@@ -200,43 +197,30 @@ void NS::Networking::Server_ReceivePackets()
 		
 	while (!IncomingRequests_.empty())
 	{
-		NetRequest Request = IncomingRequests_.front();
+		NetPacket Request = IncomingRequests_.front();
 		IncomingRequests_.pop_front();
 		Server_ProcessRequest(Request);
 	}
 }
 
-void NS::Networking::Server_ProcessRequest(const NetRequest& Request)
-{
-	if (Request.InstructionType == EInstructionType::REPLICATION)
-	{
-		return;
-	}
-	
-	if (Request.InstructionType == EInstructionType::RPC)
-	{
-		std::string Message(Request.Data);
-		NSLOG(ELogLevel::INFO, "[SERVER] Received RPC request from client. {}", Message);
-	}
-	
-	// perform RPC call.
-}
+// TODO: Server_ProcessRequest implementation.
+void NS::Networking::Server_ProcessRequest(const NetPacket& Request)
+{}
 
 void NS::Networking::Server_ReplicateToClient(const void* Data, const uint16_t Size, const uint32_t ObjectId, uint8_t ClientId)
 {
-	NS::NetRequest RepRequest;
+	NS::NetPacket RepRequest;
+	RepRequest.Reliability = EReliability::RELIABLE;
 	RepRequest.ObjectId = ObjectId;
 	RepRequest.Size = Size;
 	RepRequest.InstanceId = ClientId;
 	memcpy(RepRequest.Data, Data, NS::PACKET_SIZE);
-	RepRequest.Reliability = EReliability::RELIABLE;
-	RepRequest.InstructionType = EInstructionType::REPLICATION;
 	
 	PushRequest(RepRequest);
 }
 #endif
 
-void NS::Networking::PushRequest(const NetRequest& NewRequest)
+void NS::Networking::PushRequest(const NetPacket& NewRequest)
 {
 	OutgoingRequests_.push_back(NewRequest);
 }
