@@ -13,12 +13,7 @@ void NS::Actor::Update(const float DeltaTime)
 	}
 }
 
-void NS::Actor::SetActorLocation(const sf::Vector2f NewLocation)
+void NS::Actor::GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties)
 {
-	Transform_.Position = NewLocation;
-}
-
-const sf::Vector2f& NS::Actor::GetActorLocation() const
-{
-	return Transform_.Position;
+	OutReplicatedProperties.push_back({&TestVariable, sizeof(float)});
 }

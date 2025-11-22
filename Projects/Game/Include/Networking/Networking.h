@@ -43,6 +43,12 @@ namespace NS
 		uint16_t Size;
 		char Data[NS::PACKET_SIZE];
 	};
+	
+	struct ReplicatedProp
+	{
+		void* Ptr;
+		uint16_t Size;
+	};
 
 	struct ReplicationObject
 	{
