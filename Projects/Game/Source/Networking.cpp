@@ -19,7 +19,7 @@ NS::Networking::Networking()
 
 #ifdef NS_CLIENT
 // TODO: Use Non-blocking sockets if possible.
-void NS::Networking::TCPConnect(const sf::IpAddress& ServerAddress, const uint16_t ServerPort)
+void NS::Networking::Client_ConnectToServer(const sf::IpAddress& ServerAddress, const uint16_t ServerPort)
 {
 	TCPSocket_.disconnect();
 	const auto ConnectStatus = TCPSocket_.connect(ServerAddress, ServerPort, sf::seconds(NS::DEFAULT_CONNECTION_TIMEOUT));

@@ -102,7 +102,7 @@ namespace NS
 	public:
 
 #ifdef NS_CLIENT // A public client-only functions go here.
-		void TCPConnect(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
+		void Client_ConnectToServer(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
 		void Client_ReplicateFromServer(void* Data, uint16_t Size, uint32_t ObjectId);
 #endif
 #ifdef NS_SERVER // All public server-only functions go here.
