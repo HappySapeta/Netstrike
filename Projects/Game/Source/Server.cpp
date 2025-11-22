@@ -5,8 +5,6 @@
 #include "Engine/Engine.h"
 #include <Networking/Networking.h>
 
-#include "Test/ReplicationTest.h"
-
 static NS::Engine Engine;
 
 using HRClock = std::chrono::high_resolution_clock;
@@ -17,13 +15,8 @@ static float DeltaTimeSecs = 0.016f;
 
 int main()
 {
-	NS::ReplicationTest Test;
-	Test.Variable = 25.2345f;
-	
 	NS::Networking* Networking = NS::Networking::Get();
 	Networking->Server_Listen();
-
-	Networking->Server_ReplicateToClient(&Test.Variable, sizeof(Test.Variable), 0, 0);
 	Networking->Start();
 
 	while (true)
