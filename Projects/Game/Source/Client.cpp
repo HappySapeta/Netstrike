@@ -49,7 +49,6 @@ int main()
 	}
 	
 	Engine.StopSubsystems();
-
 	
 	std::cin.get();
 	return 0;

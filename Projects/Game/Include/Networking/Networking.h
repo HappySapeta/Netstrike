@@ -86,6 +86,7 @@ namespace NS
 	
 	class Networking
 	{
+		friend class Engine;
 	public:
 
 		[[nodiscard]] static Networking* Get()
@@ -98,33 +99,33 @@ namespace NS
 			return Instance_.get();
 		}
 
+#pragma region DELETED METHODS
 		Networking(const Networking&) = delete;
 		Networking(Networking&&) = delete;
 		Networking& operator=(const Networking&) = delete;
 		Networking& operator=(Networking&&) = delete;
-		
-		void PushRequest(const NetRequest& NewRequest);
-		void Start();
-		void Stop();
-
-		void AddReplicateProps(const std::vector<ReplicatedProp>& Props);
-		
+#pragma endregion
+	
 	public:
 
 #ifdef NS_CLIENT // A public client-only functions go here.
 		void TCPConnect(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
 		void Client_ReplicateFromServer(void* Data, uint16_t Size, uint32_t ObjectId);
 #endif
-
 #ifdef NS_SERVER // All public server-only functions go here.
 		void Server_Listen();
 		void Server_ReplicateToClient(const void* Data, uint16_t Size, uint32_t ObjectId, uint8_t ClientId);
+		
 #endif
 
 	private:
 
 		Networking();
+		void Start();
+		void Stop();
+		void PushRequest(const NetRequest& NewRequest);
 		void ProcessRequests();
+		void AddReplicateProps(const std::vector<ReplicatedProp>& Props);
 		NS::ReplicationObject Unmap(uint32_t ObjectId);
 
 #ifdef NS_SERVER // All private server-only functions go here.

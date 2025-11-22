@@ -28,6 +28,13 @@ void NS::Engine::StartSubsystems()
 {
 	if (Networking_)
 	{
+#ifdef NS_SERVER
+		Networking_->Server_Listen();
+#endif
+#ifdef NS_CLIENT
+		Networking_->TCPConnect(NS::SERVER_ADDRESS, NS::SERVER_PORT);
+#endif
+		
 		Networking_->Start();
 	}
 }
