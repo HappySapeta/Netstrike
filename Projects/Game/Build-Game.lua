@@ -69,6 +69,7 @@ links
     "sfml-graphics-s-d.lib",
     "sfml-network-s-d.lib",
 }
+postbuildcommands { "{COPYDIR} \"%{wks.location}Resources\" \"%{!cfg.targetdir}/Resources\"" }
 
 filter {}
 
@@ -101,3 +102,4 @@ links
     "sfml-graphics-s.lib",
     "sfml-network-s.lib",
 }
+postbuildcommands { "{COPYDIR} \"%{wks.location}Resources\" \"%{!cfg.targetdir}/Resources\"" }
