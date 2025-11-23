@@ -3,48 +3,13 @@
 #include <memory>
 #include <thread>
 #include <unordered_map>
-#include <SFML/Network.hpp>
 
-#include "GameConfiguration.h"
+#include "Networking-Types.h"
 
 namespace NS
 {
-	typedef std::uint32_t IdentifierType;
-	
-	enum class EReliability : uint8_t
-	{
-		RELIABLE,
-		UNRELIABLE
-	};
-
-	struct NetClient
-	{
-		sf::TcpSocket Socket;
-		IdentifierType ClientId;
-	};
-
-	struct ReplicatedProp
-	{
-		class Actor* ActorPtr;
-		size_t Offset;
-		size_t Size;
-	};
-
-	struct NetPacket
-	{
-		EReliability Reliability;
-		IdentifierType InstanceId;
-		IdentifierType ActorId;
-		size_t ObjectOffset;
-		char Data[NS::MAX_PACKET_SIZE];
-	};
-
-	void operator<<(sf::Packet& Packet, const NS::NetPacket& Request);
-	void operator>>(sf::Packet& Packet, NS::NetPacket& Request);
-
 	class Networking
 	{
-		friend class Engine;
 		struct ReplicatedMemAttrib
 		{
 			void* SourcePtr;
@@ -55,6 +20,11 @@ namespace NS
 	public:
 
 		[[nodiscard]] static Networking* Get();
+		void Start();
+		void Stop();
+		
+		void AddReplicateProps(const std::vector<ReplicatedProp>& Props);
+		void PushRequest(const NetPacket& NewRequest);
 
 #pragma region DELETED METHODS
 		Networking(const Networking&) = delete;
@@ -70,16 +40,13 @@ namespace NS
 #endif
 #ifdef NS_SERVER // All public server-only functions go here.
 		void Server_Listen();
+		void Server_RegisterNewActor(const Actor* NewActor);
 #endif
 
 	private:
 		Networking() = default;
-		void Start();
-		void Stop();
-		void PushRequest(const NetPacket& NewRequest);
 		void UpdateThread();
 		void UpdateReplicated();
-		void AddReplicateProps(const std::vector<ReplicatedProp>& Props);
 
 #ifdef NS_SERVER // All private server-only functions go here.
 		void Server_SendPackets();
@@ -114,6 +81,6 @@ namespace NS
 		
 		std::vector<ReplicatedProp> ReplicatedProps_;
 		std::unordered_map<IdentifierType, ReplicatedProp> ReplicationMap_;
-		std::unordered_map<Actor*, IdentifierType> ActorRegistry_;
+		std::unordered_map<const Actor*, IdentifierType> ActorRegistry_;
 	};
 }

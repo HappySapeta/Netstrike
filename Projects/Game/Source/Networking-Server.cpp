@@ -1,6 +1,7 @@
 ﻿#ifdef NS_SERVER
 
 #include "Logger.h"
+#include "Actor/Actor.h"
 #include "Networking/Networking.h"
 
 // TODO: Use Non-blocking sockets if possible.
@@ -89,6 +90,25 @@ void NS::Networking::Server_ReceivePackets()
 			}
 		}
 	}
+}
+
+void NS::Networking::Server_RegisterNewActor(const Actor* NewActor)
+{
+	// 1. add unique entry to registry
+	IdentifierType NewActorId = reinterpret_cast<IdentifierType>(NewActor);
+	ActorRegistry_[NewActor] = NewActorId;
+	
+	// 2. send packet to Clients
+	NetPacket ActorCreationRequest;
+	ActorCreationRequest.Reliability = EReliability::RELIABLE;
+	ActorCreationRequest.RequestType = ERequestType::ACTOR_CREATION;
+	ActorCreationRequest.InstanceId = NS_BROADCAST_ID;
+	ActorCreationRequest.ActorId = NewActorId;
+	ActorCreationRequest.ObjectOffset = 0;
+	const char* ActorTypeInfo = NewActor->GetTypeInfo();
+	memcpy_s(ActorCreationRequest.Data, NS::MAX_PACKET_SIZE, ActorTypeInfo, strlen(ActorTypeInfo) * sizeof(char));
+	
+	PushRequest(ActorCreationRequest);
 }
 
 #endif

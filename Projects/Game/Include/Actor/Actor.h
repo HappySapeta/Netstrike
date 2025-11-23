@@ -49,8 +49,9 @@ namespace NS
 
 			return FoundComponents;
 		}
-		
-		
+
+		virtual const char* GetTypeInfo() const;
+
 	private:
 		
 		virtual void GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties);

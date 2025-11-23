@@ -31,10 +31,13 @@ namespace NS
 			
 			if (Networking_)
 			{
+#ifdef NS_SERVER
+				Networking_->Server_RegisterNewActor(NewActor);
+#endif
 				Networking_->AddReplicateProps(ReplicatedProps);
 			}
 			
-			return static_cast<ActorType*>(Actors_.back().get());
+			return static_cast<ActorType*>(NewActor);
 		}
 		void DestroyActor(Actor* ActorToDestroy);
 

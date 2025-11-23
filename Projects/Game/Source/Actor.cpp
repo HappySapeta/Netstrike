@@ -13,6 +13,11 @@ void NS::Actor::Update(const float DeltaTime)
 	}
 }
 
+const char* NS::Actor::GetTypeInfo() const
+{
+	return "Actor";
+}
+
 void NS::Actor::GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties)
 {
 	OutReplicatedProperties.push_back({this, offsetof(Actor, TestVariable), sizeof(TestVariable)});

@@ -4,6 +4,7 @@
 #include "GameConfiguration.h"
 #include "Logger.h"
 #include "Actor/Actor.h"
+#include "Engine/Engine.h"
 
 std::unique_ptr<NS::Networking> NS::Networking::Instance_(nullptr);
 
