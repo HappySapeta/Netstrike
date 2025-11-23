@@ -21,21 +21,28 @@ NS::Networking* NS::Networking::Get()
 void NS::operator<<(sf::Packet& Packet, const NS::NetPacket& Request)
 {
 	Packet << static_cast<std::underlying_type_t<EReliability>>(Request.Reliability);
+	Packet << static_cast<std::underlying_type_t<ERequestType>>(Request.RequestType);
 	Packet << Request.InstanceId;
 	Packet << Request.ActorId;
 	Packet << Request.ObjectOffset;
+	Packet << Request.DataSize;
 	Packet.append(Request.Data, sizeof(Request.Data));
 }
 
 void NS::operator>>(sf::Packet& Packet, NS::NetPacket& Request)
 {
-	uint8_t Byte;
-	Packet >> Byte;
-	Request.Reliability = static_cast<NS::EReliability>(Byte);
+	std::underlying_type_t<EReliability> ReliabilityData;
+	Packet >> ReliabilityData;
+	Request.Reliability = static_cast<NS::EReliability>(ReliabilityData);
+	
+	std::underlying_type_t<ERequestType> RequestTypeData;
+	Packet >> RequestTypeData;
+	Request.Reliability = static_cast<NS::EReliability>(RequestTypeData);
 	
 	Packet >> Request.InstanceId;
 	Packet >> Request.ActorId;
 	Packet >> Request.ObjectOffset;
+	Packet >> Request.DataSize;
 	
 	memcpy(Request.Data, static_cast<const char*>(Packet.getData()) + Packet.getReadPosition(), sizeof(Request.Data));
 }
