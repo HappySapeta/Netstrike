@@ -101,3 +101,7 @@ links
     "sfml-graphics-s.lib",
     "sfml-network-s.lib",
 }
+
+filter {}
+
+postbuildcommands { "{COPYDIR} \"%{wks.location}Resources\" \"%{!cfg.targetdir}../../../Resources\"" }

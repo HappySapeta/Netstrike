@@ -1,10 +1,10 @@
 ﻿#pragma once
 #include <SFML/Graphics/RenderWindow.hpp>
-#include <SFML/Graphics/Transform.hpp>
 #include <SFML/System/Vector2.hpp>
 
 #include "ActorComponent.h"
 #include "SpriteComponent.h"
+#include "Networking/Networking.h"
 
 namespace NS
 {
@@ -19,6 +19,7 @@ namespace NS
 
 	class Actor
 	{
+		friend class Engine;
 	public:
 
 		Actor() = default;
@@ -49,14 +50,31 @@ namespace NS
 			return FoundComponents;
 		}
 
-		virtual void Update(const float DeltaTime);
+		virtual const char* GetTypeInfo() const;
+		virtual Actor* CreateCopy();
+		static Actor* GetStaticInstance()
+		{
+			if (!StaticInstance_)
+			{
+				StaticInstance_ = std::make_unique<Actor>();
+			}
+			
+			return StaticInstance_.get();
+		}
 
-		void SetActorLocation(const sf::Vector2f NewLocation);
-		const sf::Vector2f& GetActorLocation() const;
+	private:
+		
+		virtual void GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties);
+		virtual void Update(const float DeltaTime);
 
 	protected:
 
+		float TestVariable = 0.0f;
 		Transform Transform_;
 		std::vector<std::unique_ptr<ActorComponent>> Components_;
+		
+	private:
+		
+		static std::unique_ptr<Actor> StaticInstance_;
 	};
 }
