@@ -444,6 +444,7 @@ FodyWeavers.xsd
 *.sln
 *.vcxproj
 *.vcxproj.filters
+Binaries/
 # ----------------------
 
 # Custom don't ignores
