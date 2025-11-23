@@ -1,230 +1,61 @@
-﻿#include "Networking/Networking.h"
+﻿#include <functional>
 
-#include <functional>
-
+#include "Networking/Networking.h"
 #include "GameConfiguration.h"
 #include "Logger.h"
+#include "Actor/Actor.h"
+#include "Engine/Engine.h"
 
 std::unique_ptr<NS::Networking> NS::Networking::Instance_(nullptr);
 
-NS::Networking::Networking()
-	:
-#ifdef NS_SERVER
-	NetIdentity_(ENetAuthority::SERVER)
-#endif
-#ifdef NS_CLIENT
-	NetIdentity_(ENetAuthority::CLIENT)
-#endif
-{}
-
-#ifdef NS_CLIENT
-// TODO: Use Non-blocking sockets if possible.
-sf::TcpSocket& NS::Networking::TCPConnect(const sf::IpAddress& ServerAddress, const uint16_t ServerPort)
+NS::Networking* NS::Networking::Get()
 {
-	TCPSocket_.disconnect();
-	const auto ConnectStatus = TCPSocket_.connect(ServerAddress, ServerPort, sf::seconds(NS::DEFAULT_CONNECTION_TIMEOUT));
-	if (ConnectStatus != sf::Socket::Status::Done)
+	if (!Instance_)
 	{
-		NSLOG(NS::ELogLevel::ERROR, "Failed to connect to Server with address {}:{}", ServerAddress.toString(), ServerPort);
-	}
-	else
-	{
-		NSLOG(NS::ELogLevel::INFO, "Connected successfully to server at {}:{}", ServerAddress.toString(), ServerPort);
+		Instance_ = std::unique_ptr<Networking>(new Networking());
 	}
 
-	TCPSocket_.setBlocking(false);
-	Client_Selector_.add(TCPSocket_);
+	return Instance_.get();
+}
+
+void NS::operator<<(sf::Packet& Packet, const NS::NetPacket& Request)
+{
+	Packet << static_cast<std::underlying_type_t<EReliability>>(Request.Reliability);
+	Packet << static_cast<std::underlying_type_t<ERequestType>>(Request.RequestType);
+	Packet << Request.InstanceId;
+	Packet << Request.ActorId;
+	Packet << Request.ObjectOffset;
+	Packet << Request.DataSize;
+	Packet.append(Request.Data, sizeof(Request.Data));
+}
+
+void NS::operator>>(sf::Packet& Packet, NS::NetPacket& Request)
+{
+	std::underlying_type_t<EReliability> ReliabilityData;
+	Packet >> ReliabilityData;
+	Request.Reliability = static_cast<NS::EReliability>(ReliabilityData);
 	
-	return TCPSocket_;
-}
-
-void NS::Networking::Client_ProcessRequest(NS::NetRequest Request)
-{
-	if (Request.InstructionType == EInstructionType::REPLICATION)
-	{
-		const ReplicationObject& ReplObject = Unmap(Request.ObjectId);
-		if (ReplObject.DataPtr)
-		{
-			memcpy(ReplObject.DataPtr, Request.Data, ReplObject.Size);
-		}
-	}
-}
-
-void NS::Networking::Client_SendPackets()
-{
-	while (!OutgoingRequests_.empty())
-	{
-		NS::NetRequest Request = OutgoingRequests_.front();
-		OutgoingRequests_.pop_front();
-		
-		sf::Packet Packet;
-		Packet << Request;
-		
-		if (Request.Reliability == EReliability::RELIABLE)
-		{
-			const auto SendStatus = TCPSocket_.send(Packet);
-			if (SendStatus != sf::Socket::Status::Done)
-			{
-				NSLOG(ELogLevel::ERROR, "Failed to send packet to server!");
-			}
-		}
-	}
-}
-
-void NS::Networking::Client_ReceivePackets()
-{
-	if (Client_Selector_.wait(sf::milliseconds(NS::CLIENT_SELECTOR_WAIT_TIME_MS)))
-	{
-		if (Client_Selector_.isReady(TCPSocket_))
-		{
-			sf::Packet Packet;
-			const auto ReceiveStatus = TCPSocket_.receive(Packet);
-			if (ReceiveStatus == sf::Socket::Status::Error)
-			{
-				NSLOG(LOGERROR, "[CLIENT] Failed to receive packet.");
-			}
-			else if (ReceiveStatus == sf::Socket::Status::Done)
-			{
-				NSLOG(LOGINFO, "[CLIENT] Received packet from server.");
-				NS::NetRequest Request;
-				Packet >> Request;
-				IncomingRequests_.emplace_back(Request);
-			}
-		}
-	}
-		
-	while (!IncomingRequests_.empty())
-	{
-		NetRequest Request = IncomingRequests_.front();
-		IncomingRequests_.pop_front();
-		Client_ProcessRequest(Request);
-	}
-}
-#endif
-
-#ifdef NS_SERVER
-// TODO: Use Non-blocking sockets if possible.
-void NS::Networking::Server_Listen()
-{
-	ListenerSocket_.close();
-	NSLOG(NS::ELogLevel::INFO, "Listening for connections on port {}", NS::SERVER_PORT);
-	const sf::Socket::Status ListenStatus = ListenerSocket_.listen(NS::SERVER_PORT);
+	std::underlying_type_t<ERequestType> RequestTypeData;
+	Packet >> RequestTypeData;
+	Request.RequestType = static_cast<NS::ERequestType>(RequestTypeData);
 	
-	if (ListenStatus != sf::Socket::Status::Done)
-	{
-		NSLOG(ELogLevel::ERROR, "[SERVER] Failed to listen on port {}.", NS::SERVER_PORT);
-		return;
-	}
-
-	int NumClients = NS::DEBUG_SERVER_MAX_CONNECTIONS;
-	while (NumClients > 0)
-	{
-		ConnectedClients_.emplace_back(std::make_unique<NetClient>());
-		std::unique_ptr<NetClient>& NewClient = ConnectedClients_.back();
-		
-		sf::Socket::Status AcceptStatus = ListenerSocket_.accept(NewClient->Socket);
-		if (AcceptStatus != sf::Socket::Status::Done)
-		{
-			ConnectedClients_.pop_back();
-			NSLOG(NS::ELogLevel::INFO, "Failed to accept connection.");
-		}
-		else
-		{
-			NewClient->Socket.setBlocking(false);
-			NewClient->ClientId = static_cast<uint16_t>(ConnectedClients_.size() - 1);
-			Server_Selector_.add(NewClient->Socket);
-			
-			--NumClients;
-			NSLOG(ELogLevel::INFO, "Accepted connection from {}:{}", 
-				NewClient->Socket.getRemoteAddress()->toString(),
-				NewClient->Socket.getRemotePort());
-		}
-	}
-}
-
-void NS::Networking::Server_SendPackets()
-{
-	while (!OutgoingRequests_.empty())
-	{
-		NetRequest Request = OutgoingRequests_.front();
-		OutgoingRequests_.pop_front();
-		NSLOG(LOGINFO, "[SERVER] Sending packet");
-		{
-			if (Request.Reliability == EReliability::RELIABLE)
-			{
-				sf::TcpSocket& Socket = ConnectedClients_.at(Request.InstanceId)->Socket;
-				sf::Packet Packet;
-				Packet << Request;
-				const auto SendStatus = Socket.send(Packet);
-				if (SendStatus == sf::Socket::Status::Error)
-				{
-					NSLOG(ELogLevel::ERROR, "Failed to send packet. {}:{}", Socket.getRemoteAddress()->toString(), Socket.getRemotePort());
-				}
-			}
-		}
-	}
-}
-
-void NS::Networking::Server_ReceivePackets()
-{
-	if (Server_Selector_.wait(sf::milliseconds(NS::SERVER_SELECTOR_WAIT_TIME_MS)))
-	{
-		for (auto& SocketPtr : ConnectedClients_)
-		{
-			if (!Server_Selector_.isReady(SocketPtr->Socket))
-			{
-				continue;
-			}
-		
-			sf::Packet Packet;
-			const auto ReceiveStatus = SocketPtr->Socket.receive(Packet);
-			if (ReceiveStatus == sf::Socket::Status::Error)
-			{
-				NSLOG(LOGERROR, "[CLIENT] Failed to receive packet.");
-			}
-			else if (ReceiveStatus == sf::Socket::Status::Done)
-			{
-				NS::NetRequest Request;
-				Packet >> Request;
-				IncomingRequests_.emplace_back(Request);
-			}
-		}
-	}
-		
-	while (!IncomingRequests_.empty())
-	{
-		NetRequest Request = IncomingRequests_.front();
-		IncomingRequests_.pop_front();
-		Server_ProcessRequest(Request);
-	}
-}
-
-void NS::Networking::Server_ProcessRequest(const NetRequest& Request)
-{
-	if (Request.InstructionType == EInstructionType::REPLICATION)
-	{
-		return;
-	}
+	Packet >> Request.InstanceId;
+	Packet >> Request.ActorId;
+	Packet >> Request.ObjectOffset;
+	Packet >> Request.DataSize;
 	
-	if (Request.InstructionType == EInstructionType::RPC)
-	{
-		std::string Message(Request.Data);
-		NSLOG(ELogLevel::INFO, "[SERVER] Received RPC request from client. {}", Message);
-	}
-	
-	// perform RPC call.
+	memcpy(Request.Data, static_cast<const char*>(Packet.getData()) + Packet.getReadPosition(), sizeof(Request.Data));
 }
-#endif
 
-void NS::Networking::PushRequest(const NetRequest& NewRequest)
+void NS::Networking::PushRequest(const NetPacket& NewRequest)
 {
-	OutgoingRequests_.push_back(NewRequest);
+	OutgoingPackets_.push_back(NewRequest);
 }
 
 void NS::Networking::Start()
 {
 	NSLOG(ELogLevel::INFO, "Starting network update thread.");
-	NetworkUpdateThread_ = std::thread(std::bind(&NS::Networking::ProcessRequests, this));
+	NetworkUpdateThread_ = std::thread(std::bind(&NS::Networking::UpdateThread, this));
 }
 
 void NS::Networking::Stop()
@@ -241,7 +72,20 @@ void NS::Networking::Stop()
 	}
 }
 
-void NS::Networking::ProcessRequests()
+void NS::Networking::AddReplicateProps(const std::vector<ReplicatedProp>& Props)
+{
+	for (const ReplicatedProp& Prop : Props)
+	{
+		if (ActorRegistry_.contains(Prop.ActorPtr))
+		{
+			const IdentifierType ActorId = ActorRegistry_.at(Prop.ActorPtr); // TODO : Fill actor registry.
+			ReplicationMap_[ActorId] = Prop;
+			ReplicatedProps_.push_back(Prop);
+		}
+	}
+}
+
+void NS::Networking::UpdateThread()
 {
 	while (!StopRequested)
 	{
@@ -249,21 +93,13 @@ void NS::Networking::ProcessRequests()
 #ifdef NS_CLIENT
 		Client_SendPackets();
 		Client_ReceivePackets();
+		Client_ProcessRequests();
 #endif
 
 #ifdef NS_SERVER
 		Server_SendPackets();
 		Server_ReceivePackets();
+		Server_ProcessRequests();
 #endif
 	}
-}
-
-NS::ReplicationObject NS::Networking::Unmap(uint32_t ObjectId)
-{
-	if (ReplObjectMap_.contains(ObjectId))
-	{
-		return ReplObjectMap_[ObjectId];
-	}
-
-	return {nullptr, 0};
 }

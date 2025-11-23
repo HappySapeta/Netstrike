@@ -1,5 +1,9 @@
 ﻿#include "Actor/Actor.h"
+
+#include "Logger.h"
 #include "Actor/ActorComponent.h"
+
+std::unique_ptr<NS::Actor> NS::Actor::StaticInstance_(nullptr);
 
 NS::Transform::Transform()
 	:Position({0,0}), Rotation({0,0}), Scale({1,1})
@@ -13,12 +17,18 @@ void NS::Actor::Update(const float DeltaTime)
 	}
 }
 
-void NS::Actor::SetActorLocation(const sf::Vector2f NewLocation)
+const char* NS::Actor::GetTypeInfo() const
 {
-	Transform_.Position = NewLocation;
+	return "Actor";
 }
 
-const sf::Vector2f& NS::Actor::GetActorLocation() const
+NS::Actor* NS::Actor::CreateCopy()
 {
-	return Transform_.Position;
+	NSLOG(ELogLevel::INFO, "[CLIENT] Creating new actor");
+	return new Actor();
+}
+
+void NS::Actor::GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties)
+{
+	OutReplicatedProperties.push_back({this, offsetof(Actor, TestVariable), sizeof(TestVariable)});
 }
