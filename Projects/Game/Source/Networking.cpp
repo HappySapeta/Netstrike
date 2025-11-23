@@ -1,21 +1,52 @@
-﻿#include "Networking/Networking.h"
+﻿#include <functional>
 
-#include <functional>
-
+#include "Networking/Networking.h"
 #include "GameConfiguration.h"
 #include "Logger.h"
 
 std::unique_ptr<NS::Networking> NS::Networking::Instance_(nullptr);
 
-NS::Networking::Networking()
-	:
-#ifdef NS_SERVER
-	NetIdentity_(ENetAuthority::SERVER)
-#endif
-#ifdef NS_CLIENT
-	NetIdentity_(ENetAuthority::CLIENT)
-#endif
-{}
+NS::Networking* NS::Networking::Get()
+{
+	if (!Instance_)
+	{
+		Instance_ = std::unique_ptr<Networking>(new Networking());
+	}
+
+	return Instance_.get();
+}
+
+void NS::operator<<(sf::Packet& Packet, const NS::ReplicatedProp& Property)
+{
+	Packet << Property.ActorId;
+	Packet << Property.ObjectId;
+	Packet << Property.Size;
+}
+
+void NS::operator>>(sf::Packet& Packet, ReplicatedProp& Property)
+{
+	Packet >> Property.ActorId;
+	Packet >> Property.ObjectId;
+	Packet >> Property.Size;
+}
+
+void NS::operator<<(sf::Packet& Packet, const NS::NetPacket& Request)
+{
+	Packet << static_cast<std::underlying_type_t<EReliability>>(Request.Reliability);
+	Packet << Request.InstanceId;
+	Packet << Request.Property;
+	Packet.append(Request.Data, sizeof(Request.Data));
+}
+
+void NS::operator>>(sf::Packet& Packet, NS::NetPacket& Request)
+{
+	uint8_t Byte;
+	Packet >> Byte;
+	Request.Reliability = static_cast<NS::EReliability>(Byte);
+	Packet >> Request.InstanceId;
+	Packet >> Request.Property;
+	memcpy(Request.Data, static_cast<const char*>(Packet.getData()) + Packet.getReadPosition(), sizeof(Request.Data));
+}
 
 #ifdef NS_CLIENT
 // TODO: Use Non-blocking sockets if possible.
@@ -38,14 +69,14 @@ void NS::Networking::Client_ConnectToServer(const sf::IpAddress& ServerAddress, 
 
 void NS::Networking::Client_ProcessRequest(NS::NetPacket Request)
 {
-	const ReplicationObject& ReplObject = Unmap(Request.ObjectId);
-	if (ReplObject.DataPtr)
+	const auto& [SourcePtr, TargetPtr, SizeInBytes] = Unmap(Request.Property);
+	if (SourcePtr && TargetPtr)
 	{
-		memcpy(ReplObject.DataPtr, Request.Data, ReplObject.Size);
+		memcpy(TargetPtr, SourcePtr, SizeInBytes);
 	}
 	else
 	{
-		NSLOG(ELogLevel::ERROR, "[CLIENT] Failed to unmap ObjectId {}.", Request.ObjectId);
+		NSLOG(ELogLevel::ERROR, "[CLIENT] Failed to unmap ObjectId.");
 	}
 }
 
@@ -102,7 +133,7 @@ void NS::Networking::Client_ReceivePackets()
 
 void NS::Networking::Client_ReplicateFromServer(void* Data, uint16_t Size, const uint32_t ObjectId)
 {
-	ReplObjectMap_[ObjectId] = {Data, Size};
+	ReplicationMap_[ObjectId] = {Data, Size};
 }
 
 #endif
@@ -207,14 +238,13 @@ void NS::Networking::Server_ReceivePackets()
 void NS::Networking::Server_ProcessRequest(const NetPacket& Request)
 {}
 
-void NS::Networking::Server_ReplicateToClient(const void* Data, const uint16_t Size, const uint32_t ObjectId, uint8_t ClientId)
+void NS::Networking::Server_ReplicateToClient(const ReplicatedProp& Property, const IdentifierType InstanceId)
 {
 	NS::NetPacket RepRequest;
 	RepRequest.Reliability = EReliability::RELIABLE;
-	RepRequest.ObjectId = ObjectId;
-	RepRequest.Size = Size;
-	RepRequest.InstanceId = ClientId;
-	memcpy(RepRequest.Data, Data, NS::PACKET_SIZE);
+	RepRequest.InstanceId = InstanceId;
+	RepRequest.Property = Property;
+	memcpy_s(RepRequest.Data, NS::MAX_PACKET_SIZE, Property.DataPtr, Property.Size);
 	
 	PushRequest(RepRequest);
 }
@@ -248,6 +278,9 @@ void NS::Networking::Stop()
 void NS::Networking::AddReplicateProps(const std::vector<ReplicatedProp>& Props)
 {
 	ReplicatedProps_.insert(ReplicatedProps_.end(), Props.begin(), Props.end());
+	for (const ReplicatedProp& Prop : Props)
+	{
+	}
 }
 
 void NS::Networking::ProcessRequests()
@@ -267,12 +300,7 @@ void NS::Networking::ProcessRequests()
 	}
 }
 
-NS::ReplicationObject NS::Networking::Unmap(uint32_t ObjectId)
+NS::Networking::ReplicatedMemAttrib NS::Networking::Unmap(const ReplicatedProp& Property)
 {
-	if (ReplObjectMap_.contains(ObjectId))
-	{
-		return ReplObjectMap_[ObjectId];
-	}
-
-	return {nullptr, 0};
+	return {};
 }
