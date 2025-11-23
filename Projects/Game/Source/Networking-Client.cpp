@@ -21,25 +21,12 @@ void NS::Networking::Client_ConnectToServer(const sf::IpAddress& ServerAddress, 
 	Client_Selector_.add(TCPSocket_);
 }
 
-void NS::Networking::Client_ProcessRequest(NS::NetPacket Request)
-{
-	const auto& [SourcePtr, TargetPtr, SizeInBytes] = Unmap(Request.Property);
-	if (SourcePtr && TargetPtr)
-	{
-		memcpy(TargetPtr, SourcePtr, SizeInBytes);
-	}
-	else
-	{
-		NSLOG(ELogLevel::ERROR, "[CLIENT] Failed to unmap ObjectId.");
-	}
-}
-
 void NS::Networking::Client_SendPackets()
 {
-	while (!OutgoingRequests_.empty())
+	while (!OutgoingPackets_.empty())
 	{
-		NS::NetPacket Request = OutgoingRequests_.front();
-		OutgoingRequests_.pop_front();
+		NS::NetPacket Request = OutgoingPackets_.front();
+		OutgoingPackets_.pop_front();
 		
 		sf::Packet Packet;
 		Packet << Request;
@@ -72,22 +59,10 @@ void NS::Networking::Client_ReceivePackets()
 				NSLOG(LOGINFO, "[CLIENT] Received packet from server.");
 				NS::NetPacket Request;
 				Packet >> Request;
-				IncomingRequests_.emplace_back(Request);
+				IncomingPackets_.emplace_back(Request);
 			}
 		}
 	}
-		
-	while (!IncomingRequests_.empty())
-	{
-		NetPacket Request = IncomingRequests_.front();
-		IncomingRequests_.pop_front();
-		Client_ProcessRequest(Request);
-	}
-}
-
-void NS::Networking::Client_ReplicateFromServer(void* Data, uint16_t Size, const uint32_t ObjectId)
-{
-	ReplicationMap_[ObjectId] = {Data, Size};
 }
 
 #endif

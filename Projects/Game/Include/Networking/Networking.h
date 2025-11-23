@@ -25,28 +25,20 @@ namespace NS
 
 	struct ReplicatedProp
 	{
-		void* DataPtr;
+		class Actor* ActorPtr;
+		size_t Offset;
 		size_t Size;
-		IdentifierType ActorId;
-		IdentifierType ObjectId;
 	};
 
 	struct NetPacket
 	{
 		EReliability Reliability;
 		IdentifierType InstanceId;
-		ReplicatedProp Property;
+		IdentifierType ActorId;
+		size_t ObjectOffset;
 		char Data[NS::MAX_PACKET_SIZE];
 	};
 
-	struct ReplicationObject
-	{
-		void* DataPtr = nullptr;
-		uint32_t Size;
-	};
-
-	void operator<<(sf::Packet& Packet, const NS::ReplicatedProp& Property);
-	void operator>>(sf::Packet& Packet, ReplicatedProp& Property);
 	void operator<<(sf::Packet& Packet, const NS::NetPacket& Request);
 	void operator>>(sf::Packet& Packet, NS::NetPacket& Request);
 
@@ -75,11 +67,9 @@ namespace NS
 
 #ifdef NS_CLIENT // A public client-only functions go here.
 		void Client_ConnectToServer(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
-		void Client_ReplicateFromServer(void* Data, uint16_t Size, uint32_t ObjectId);
 #endif
 #ifdef NS_SERVER // All public server-only functions go here.
 		void Server_Listen();
-		void Server_ReplicateToClient(const ReplicatedProp& Property, IdentifierType InstanceId);
 #endif
 
 	private:
@@ -87,20 +77,18 @@ namespace NS
 		void Start();
 		void Stop();
 		void PushRequest(const NetPacket& NewRequest);
-		void ProcessRequests();
+		void UpdateThread();
+		void UpdateReplicated();
 		void AddReplicateProps(const std::vector<ReplicatedProp>& Props);
-		ReplicatedMemAttrib Unmap(const ReplicatedProp& Property);
 
 #ifdef NS_SERVER // All private server-only functions go here.
 		void Server_SendPackets();
 		void Server_ReceivePackets();
-		void Server_ProcessRequest(const NetPacket& Request);
 #endif
 
 #ifdef NS_CLIENT // All private client-only functions go here.
 		void Client_SendPackets();
 		void Client_ReceivePackets();
-		void Client_ProcessRequest(NS::NetPacket Request);
 #endif
 	
 	private: // DATA MEMBERS
@@ -118,13 +106,14 @@ namespace NS
 		
 		static std::unique_ptr<Networking> Instance_;
 		
-		std::deque<NetPacket> IncomingRequests_;
-		std::deque<NetPacket> OutgoingRequests_;
-		std::unordered_map<uint32_t, ReplicationObject> ReplicationMap_;
+		std::deque<NetPacket> IncomingPackets_;
+		std::deque<NetPacket> OutgoingPackets_;
 		
 		std::thread NetworkUpdateThread_;
 		bool StopRequested = false;
 		
 		std::vector<ReplicatedProp> ReplicatedProps_;
+		std::unordered_map<IdentifierType, ReplicatedProp> ReplicationMap_;
+		std::unordered_map<Actor*, IdentifierType> ActorRegistry_;
 	};
 }

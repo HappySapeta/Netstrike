@@ -44,10 +44,10 @@ void NS::Networking::Server_Listen()
 
 void NS::Networking::Server_SendPackets()
 {
-	while (!OutgoingRequests_.empty())
+	while (!OutgoingPackets_.empty())
 	{
-		NetPacket Request = OutgoingRequests_.front();
-		OutgoingRequests_.pop_front();
+		NetPacket Request = OutgoingPackets_.front();
+		OutgoingPackets_.pop_front();
 		{
 			if (Request.Reliability == EReliability::RELIABLE)
 			{
@@ -85,31 +85,10 @@ void NS::Networking::Server_ReceivePackets()
 			{
 				NS::NetPacket Request;
 				Packet >> Request;
-				IncomingRequests_.emplace_back(Request);
+				IncomingPackets_.emplace_back(Request);
 			}
 		}
 	}
-		
-	while (!IncomingRequests_.empty())
-	{
-		NetPacket Request = IncomingRequests_.front();
-		IncomingRequests_.pop_front();
-		Server_ProcessRequest(Request);
-	}
 }
 
-// TODO: Server_ProcessRequest implementation.
-void NS::Networking::Server_ProcessRequest(const NetPacket& Request)
-{}
-
-void NS::Networking::Server_ReplicateToClient(const ReplicatedProp& Property, const IdentifierType InstanceId)
-{
-	NS::NetPacket RepRequest;
-	RepRequest.Reliability = EReliability::RELIABLE;
-	RepRequest.InstanceId = InstanceId;
-	RepRequest.Property = Property;
-	memcpy_s(RepRequest.Data, NS::MAX_PACKET_SIZE, Property.DataPtr, Property.Size);
-	
-	PushRequest(RepRequest);
-}
 #endif
