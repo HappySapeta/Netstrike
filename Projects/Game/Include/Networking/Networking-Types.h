@@ -44,6 +44,7 @@ namespace NS
 		InstanceIdType InstanceId;
 		IdentifierType ActorId;
 		size_t ObjectOffset;
+		size_t DataSize;
 		char Data[NS::MAX_PACKET_SIZE];
 	};
 

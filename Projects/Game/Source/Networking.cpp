@@ -104,17 +104,14 @@ void NS::Networking::ProcessRequests()
 	{
 		NetPacket Packet = IncomingPackets_.front();
 		IncomingPackets_.pop_front();
-		
-		IdentifierType ActorId = Packet.ActorId;
-		if (ReplicationMap_.contains(ActorId))
+
+		switch (Packet.RequestType)
 		{
-			const ReplicatedProp& Prop = ReplicationMap_.at(ActorId);
-			Actor* Actor = Prop.ActorPtr;
-			size_t Offset = Prop.Offset;
-			size_t Size = Prop.Size;
-		
-			void* DataPtr = Actor + Offset;
-			memcpy_s(DataPtr, Size, Packet.Data, NS::MAX_PACKET_SIZE);
+			case ERequestType::ACTOR_CREATION:
+			{
+				Client_ProcessRequest_ActorCreate(Packet);
+				break;
+			}
 		}
 	}
 #endif

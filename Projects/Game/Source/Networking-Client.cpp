@@ -1,6 +1,7 @@
 ﻿#ifdef NS_CLIENT
 
 #include "Logger.h"
+#include "Engine/Engine.h"
 #include "Networking/Networking.h"
 
 // TODO: Use Non-blocking sockets if possible.
@@ -63,6 +64,13 @@ void NS::Networking::Client_ReceivePackets()
 			}
 		}
 	}
+}
+
+void NS::Networking::Client_ProcessRequest_ActorCreate(const NetPacket& Packet)
+{
+	const std::string TypeInfo(Packet.Data, Packet.DataSize);
+	Actor* NewActor = Engine::Get()->CreateActor(TypeInfo);
+	ActorRegistry_[NewActor] = Packet.ActorId;
 }
 
 #endif

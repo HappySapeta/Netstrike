@@ -56,6 +56,7 @@ namespace NS
 #ifdef NS_CLIENT // All private client-only functions go here.
 		void Client_SendPackets();
 		void Client_ReceivePackets();
+		void Client_ProcessRequest_ActorCreate(const NetPacket& Packet);
 #endif
 	
 	private: // DATA MEMBERS

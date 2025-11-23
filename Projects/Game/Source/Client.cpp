@@ -4,12 +4,11 @@
 #include "Logger.h"
 #include "Engine/Engine.h"
 
-static NS::Engine Engine;
-
 #define SHOW_ACTIVITY_INDICATOR
 
 int main()
 {
+	NS::Engine* Engine = NS::Engine::Get();
 	sf::RenderWindow Window(sf::VideoMode({NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT}), "!! N E T S T R I K E !!");
 	
 #ifdef SHOW_ACTIVITY_INDICATOR
@@ -18,7 +17,7 @@ int main()
 	Square.setFillColor(sf::Color::White);
 #endif
 	
-	Engine.StartSubsystems();
+	Engine->StartSubsystems();
 	
 	while (Window.isOpen())
 	{
@@ -31,12 +30,12 @@ int main()
 			}
 		}
 		
-		Engine.Update(0.016f);
+		Engine->Update(0.016f);
 		
 		// DRAW
 		{
 			Window.clear();
-			Engine.Draw(Window);
+			Engine->Draw(Window);
 #ifdef SHOW_ACTIVITY_INDICATOR
 			// Activity indicator
 			{
@@ -48,7 +47,7 @@ int main()
 		}
 	}
 	
-	Engine.StopSubsystems();
+	Engine->StopSubsystems();
 	
 	std::cin.get();
 	return 0;

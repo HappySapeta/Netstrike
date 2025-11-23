@@ -1,8 +1,20 @@
 ﻿#include "Engine/Engine.h"
 
+std::unique_ptr<NS::Engine> NS::Engine::Instance_(nullptr);
+
 NS::Engine::Engine()
 	:Networking_(NS::Networking::Get())
 {}
+
+NS::Engine* NS::Engine::Get()
+{
+	if (!Instance_)
+	{
+		Instance_ = std::unique_ptr<Engine>(new Engine());
+	}
+	
+	return Instance_.get();
+}
 
 void NS::Engine::Update(const float DeltaTime)
 {
@@ -45,6 +57,26 @@ void NS::Engine::StopSubsystems()
 	{
 		Networking_->Stop();
 	}
+}
+
+NS::Actor* NS::Engine::CreateActor(const std::string TypeInfo)
+{
+	const ActorConstructionCallback ActorConstructor = ActorConstructors_.at(TypeInfo);
+	Actors_.emplace_back(ActorConstructor());
+	Actor* NewActor = Actors_.back().get();
+			
+	std::vector<ReplicatedProp> ReplicatedProps;
+	NewActor->GetReplicatedProperties(ReplicatedProps);
+			
+	if (Networking_)
+	{
+#ifdef NS_SERVER
+		Networking_->Server_RegisterNewActor(NewActor);
+#endif
+		Networking_->AddReplicateProps(ReplicatedProps);
+	}
+			
+	return NewActor;
 }
 
 void NS::Engine::DestroyActor(Actor* ActorToDestroy)

@@ -4,8 +4,6 @@
 #include "GameConfiguration.h"
 #include "Engine/Engine.h"
 
-static NS::Engine Engine;
-
 using HRClock = std::chrono::high_resolution_clock;
 using TimePoint = std::chrono::high_resolution_clock::time_point;
 using Duration = std::chrono::duration<float>;
@@ -14,14 +12,15 @@ static float DeltaTimeSecs = 0.016f;
 
 int main()
 {
-	Engine.StartSubsystems();
+	NS::Engine* Engine = NS::Engine::Get();
+	Engine->StartSubsystems();
 	
 	while (true)
 	{
 		static TimePoint TickStart;
 		TickStart = HRClock::now();
 		
-		Engine.Update(0.016f);
+		Engine->Update(0.016f);
 
 		Duration TickDuration = HRClock::now() - TickStart;
 		DeltaTimeSecs = TickDuration.count();
@@ -34,6 +33,6 @@ int main()
 		}
 	}
 	
-	Engine.StopSubsystems();
+	Engine->StopSubsystems();
 	return 0;
 }  
