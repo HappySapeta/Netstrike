@@ -95,7 +95,7 @@ void NS::Networking::Server_ReceivePackets()
 void NS::Networking::Server_RegisterNewActor(const Actor* NewActor)
 {
 	// 1. add unique entry to registry
-	IdentifierType NewActorId = reinterpret_cast<IdentifierType>(NewActor);
+	IdentifierType NewActorId = LastActorId++;
 	ActorRegistry_[NewActor] = NewActorId;
 	
 	// 2. send packet to Clients

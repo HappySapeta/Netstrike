@@ -64,6 +64,7 @@ namespace NS
 		sf::TcpListener ListenerSocket_;
 		std::vector<std::unique_ptr<NetClient>> ConnectedClients_;
 		sf::SocketSelector Server_Selector_;
+		IdentifierType LastActorId = 0;
 #endif
 
 #ifdef NS_CLIENT // A private client-only functions go here.
