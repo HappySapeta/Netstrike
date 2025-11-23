@@ -104,10 +104,11 @@ void NS::Networking::Server_ProcessRequests()
 		const IdentifierType ActorId = ActorRegistry_.at(Prop.ActorPtr);
 		NetPacket ReplicationRequest;
 		ReplicationRequest.Reliability = EReliability::RELIABLE;
+		ReplicationRequest.RequestType = ERequestType::REPLICATION;
 		ReplicationRequest.InstanceId = 0; // TODO : Handle multiple clients
 		ReplicationRequest.ActorId = ActorId;
 		ReplicationRequest.ObjectOffset = Prop.Offset;
-		
+		ReplicationRequest.DataSize = Prop.Size; 
 		void* DataPtr = Prop.ActorPtr + Prop.Offset;
 		memcpy_s(ReplicationRequest.Data, NS::MAX_PACKET_SIZE, DataPtr, Prop.Size);
 			
@@ -125,11 +126,13 @@ void NS::Networking::Server_RegisterNewActor(const Actor* NewActor)
 	NetPacket ActorCreationRequest;
 	ActorCreationRequest.Reliability = EReliability::RELIABLE;
 	ActorCreationRequest.RequestType = ERequestType::ACTOR_CREATION;
-	ActorCreationRequest.InstanceId = NS_BROADCAST_ID;
+	ActorCreationRequest.InstanceId = 0;
 	ActorCreationRequest.ActorId = NewActorId;
 	ActorCreationRequest.ObjectOffset = 0;
+	
 	const char* ActorTypeInfo = NewActor->GetTypeInfo();
-	memcpy_s(ActorCreationRequest.Data, NS::MAX_PACKET_SIZE, ActorTypeInfo, strlen(ActorTypeInfo) * sizeof(char));
+	ActorCreationRequest.DataSize = strlen(ActorTypeInfo) * sizeof(char);
+	memcpy_s(ActorCreationRequest.Data, NS::MAX_PACKET_SIZE, ActorTypeInfo, ActorCreationRequest.DataSize);
 	
 	PushRequest(ActorCreationRequest);
 }

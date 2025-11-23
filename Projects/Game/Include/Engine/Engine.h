@@ -8,7 +8,6 @@
 
 namespace NS
 {
-	typedef std::function<std::unique_ptr<Actor>()> ActorConstructionCallback;
 	class Engine
 	{
 	public:
@@ -59,6 +58,6 @@ namespace NS
 		static std::unique_ptr<Engine> Instance_;
 		std::vector<std::unique_ptr<Actor>> Actors_;
 		NS::Networking* Networking_;
-		std::unordered_map<std::string, ActorConstructionCallback> ActorConstructors_;
+		std::unordered_map<std::string, Actor*> ActorConstructors_;
 	};
 }

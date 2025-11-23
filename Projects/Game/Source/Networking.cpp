@@ -37,7 +37,7 @@ void NS::operator>>(sf::Packet& Packet, NS::NetPacket& Request)
 	
 	std::underlying_type_t<ERequestType> RequestTypeData;
 	Packet >> RequestTypeData;
-	Request.Reliability = static_cast<NS::EReliability>(RequestTypeData);
+	Request.RequestType = static_cast<NS::ERequestType>(RequestTypeData);
 	
 	Packet >> Request.InstanceId;
 	Packet >> Request.ActorId;

@@ -51,6 +51,16 @@ namespace NS
 		}
 
 		virtual const char* GetTypeInfo() const;
+		virtual Actor* CreateCopy();
+		static Actor* GetStaticInstance()
+		{
+			if (!StaticInstance_)
+			{
+				StaticInstance_ = std::make_unique<Actor>();
+			}
+			
+			return StaticInstance_.get();
+		}
 
 	private:
 		
@@ -62,5 +72,9 @@ namespace NS
 		float TestVariable = 0.0f;
 		Transform Transform_;
 		std::vector<std::unique_ptr<ActorComponent>> Components_;
+		
+	private:
+		
+		static std::unique_ptr<Actor> StaticInstance_;
 	};
 }

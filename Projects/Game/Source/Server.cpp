@@ -14,6 +14,7 @@ int main()
 {
 	NS::Engine* Engine = NS::Engine::Get();
 	Engine->StartSubsystems();
+	Engine->CreateActor<NS::Actor>();
 	
 	while (true)
 	{

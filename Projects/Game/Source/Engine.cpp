@@ -4,7 +4,9 @@ std::unique_ptr<NS::Engine> NS::Engine::Instance_(nullptr);
 
 NS::Engine::Engine()
 	:Networking_(NS::Networking::Get())
-{}
+{
+	ActorConstructors_.insert({std::string("Actor"), Actor::GetStaticInstance()});
+}
 
 NS::Engine* NS::Engine::Get()
 {
@@ -61,8 +63,7 @@ void NS::Engine::StopSubsystems()
 
 NS::Actor* NS::Engine::CreateActor(const std::string TypeInfo)
 {
-	const ActorConstructionCallback ActorConstructor = ActorConstructors_.at(TypeInfo);
-	Actors_.emplace_back(ActorConstructor());
+	Actors_.emplace_back(std::unique_ptr<Actor>(ActorConstructors_.at(TypeInfo)->CreateCopy()));
 	Actor* NewActor = Actors_.back().get();
 			
 	std::vector<ReplicatedProp> ReplicatedProps;
