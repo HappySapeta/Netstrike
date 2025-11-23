@@ -93,11 +93,11 @@ void NS::Networking::UpdateThread()
 		Server_ReceivePackets();
 #endif
 		
-		UpdateReplicated();
+		ProcessRequests();
 	}
 }
 
-void NS::Networking::UpdateReplicated()
+void NS::Networking::ProcessRequests()
 {
 #ifdef NS_CLIENT
 	while (!IncomingPackets_.empty())

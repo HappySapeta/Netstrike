@@ -46,7 +46,7 @@ namespace NS
 	private:
 		Networking() = default;
 		void UpdateThread();
-		void UpdateReplicated();
+		void ProcessRequests();
 
 #ifdef NS_SERVER // All private server-only functions go here.
 		void Server_SendPackets();
