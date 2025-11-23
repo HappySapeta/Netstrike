@@ -46,16 +46,17 @@ namespace NS
 	private:
 		Networking() = default;
 		void UpdateThread();
-		void ProcessRequests();
 
 #ifdef NS_SERVER // All private server-only functions go here.
 		void Server_SendPackets();
 		void Server_ReceivePackets();
+		void Server_ProcessRequests();
 #endif
 
 #ifdef NS_CLIENT // All private client-only functions go here.
 		void Client_SendPackets();
 		void Client_ReceivePackets();
+		void Client_ProcessRequests();
 		void Client_ProcessRequest_ActorCreate(const NetPacket& Packet);
 #endif
 	

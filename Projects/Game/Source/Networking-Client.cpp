@@ -66,6 +66,24 @@ void NS::Networking::Client_ReceivePackets()
 	}
 }
 
+void NS::Networking::Client_ProcessRequests()
+{
+	while (!IncomingPackets_.empty())
+	{
+		NetPacket Packet = IncomingPackets_.front();
+		IncomingPackets_.pop_front();
+
+		switch (Packet.RequestType)
+		{
+			case ERequestType::ACTOR_CREATION:
+			{
+				Client_ProcessRequest_ActorCreate(Packet);
+				break;
+			}
+		}
+	}
+}
+
 void NS::Networking::Client_ProcessRequest_ActorCreate(const NetPacket& Packet)
 {
 	const std::string TypeInfo(Packet.Data, Packet.DataSize);

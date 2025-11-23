@@ -52,7 +52,7 @@ void NS::Networking::Server_SendPackets()
 		{
 			if (Request.Reliability == EReliability::RELIABLE)
 			{
-				sf::TcpSocket& Socket = ConnectedClients_.at(Request.InstanceId)->Socket;
+				sf::TcpSocket& Socket = ConnectedClients_.at(Request.InstanceId)->Socket; // TODO : Major bug here. InstanceId can be -1.
 				sf::Packet Packet;
 				Packet << Request;
 				const auto SendStatus = Socket.send(Packet);
@@ -89,6 +89,29 @@ void NS::Networking::Server_ReceivePackets()
 				IncomingPackets_.emplace_back(Request);
 			}
 		}
+	}
+}
+
+void NS::Networking::Server_ProcessRequests()
+{
+	for (const ReplicatedProp& Prop : ReplicatedProps_)
+	{
+		if (!ActorRegistry_.contains(Prop.ActorPtr))
+		{
+			continue;
+		}
+		
+		const IdentifierType ActorId = ActorRegistry_.at(Prop.ActorPtr);
+		NetPacket ReplicationRequest;
+		ReplicationRequest.Reliability = EReliability::RELIABLE;
+		ReplicationRequest.InstanceId = 0; // TODO : Handle multiple clients
+		ReplicationRequest.ActorId = ActorId;
+		ReplicationRequest.ObjectOffset = Prop.Offset;
+		
+		void* DataPtr = Prop.ActorPtr + Prop.Offset;
+		memcpy_s(ReplicationRequest.Data, NS::MAX_PACKET_SIZE, DataPtr, Prop.Size);
+			
+		PushRequest(ReplicationRequest);
 	}
 }
 

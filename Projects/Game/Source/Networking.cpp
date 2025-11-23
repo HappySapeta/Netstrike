@@ -86,55 +86,13 @@ void NS::Networking::UpdateThread()
 #ifdef NS_CLIENT
 		Client_SendPackets();
 		Client_ReceivePackets();
+		Client_ProcessRequests();
 #endif
 
 #ifdef NS_SERVER
 		Server_SendPackets();
 		Server_ReceivePackets();
+		Server_ProcessRequests();
 #endif
-		
-		ProcessRequests();
 	}
-}
-
-void NS::Networking::ProcessRequests()
-{
-#ifdef NS_CLIENT
-	while (!IncomingPackets_.empty())
-	{
-		NetPacket Packet = IncomingPackets_.front();
-		IncomingPackets_.pop_front();
-
-		switch (Packet.RequestType)
-		{
-			case ERequestType::ACTOR_CREATION:
-			{
-				Client_ProcessRequest_ActorCreate(Packet);
-				break;
-			}
-		}
-	}
-#endif
-#ifdef NS_SERVER
-	for (const ReplicatedProp& Prop : ReplicatedProps_)
-	{
-		if (!ActorRegistry_.contains(Prop.ActorPtr))
-		{
-			continue;
-		}
-		
-		const IdentifierType ActorId = ActorRegistry_.at(Prop.ActorPtr);
-		NetPacket ReplicationRequest;
-		ReplicationRequest.Reliability = EReliability::RELIABLE;
-		ReplicationRequest.InstanceId = 0; // TODO : Handle multiple clients
-		ReplicationRequest.ActorId = ActorId;
-		ReplicationRequest.ObjectOffset = Prop.Offset;
-		
-		void* DataPtr = Prop.ActorPtr + Prop.Offset;
-		memcpy_s(ReplicationRequest.Data, NS::MAX_PACKET_SIZE, DataPtr, Prop.Size);
-			
-		PushRequest(ReplicationRequest);
-	}
-	
-#endif
 }
