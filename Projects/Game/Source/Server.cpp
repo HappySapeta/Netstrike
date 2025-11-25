@@ -2,6 +2,7 @@
 #include <thread>
 
 #include "GameConfiguration.h"
+#include "Tank.h"
 #include "Engine/Engine.h"
 
 using HRClock = std::chrono::high_resolution_clock;
@@ -14,8 +15,8 @@ int main()
 {
 	NS::Engine* Engine = NS::Engine::Get();
 	Engine->StartSubsystems();
-	Engine->CreateActor<NS::Actor>();
 	
+	NS::Tank* Tank = Engine->CreateActor<NS::Tank>();
 	while (true)
 	{
 		static TimePoint TickStart;

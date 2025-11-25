@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include <memory>
 #include <vector>
-#include <functional>
 #include <SFML/Graphics/RenderWindow.hpp>
 
 #include "Actor/Actor.h"
@@ -58,6 +57,6 @@ namespace NS
 		static std::unique_ptr<Engine> Instance_;
 		std::vector<std::unique_ptr<Actor>> Actors_;
 		NS::Networking* Networking_;
-		std::unordered_map<std::string, Actor*> ActorConstructors_;
+		std::unordered_map<std::string, std::unique_ptr<Actor>> ActorConstructors_;
 	};
 }

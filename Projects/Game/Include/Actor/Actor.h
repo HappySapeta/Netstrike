@@ -52,15 +52,6 @@ namespace NS
 
 		virtual const char* GetTypeInfo() const;
 		virtual Actor* CreateCopy();
-		static Actor* GetStaticInstance()
-		{
-			if (!StaticInstance_)
-			{
-				StaticInstance_ = std::make_unique<Actor>();
-			}
-			
-			return StaticInstance_.get();
-		}
 
 	private:
 		
