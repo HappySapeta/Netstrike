@@ -57,7 +57,6 @@ void NS::Networking::Client_ReceivePackets()
 			}
 			else if (ReceiveStatus == sf::Socket::Status::Done)
 			{
-				NSLOG(LOGINFO, "[CLIENT] Received packet from server.");
 				NS::NetPacket Request;
 				Packet >> Request;
 				IncomingPackets_.emplace_back(Request);

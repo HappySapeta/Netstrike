@@ -13,3 +13,13 @@ NS::Tank::Tank()
 void NS::Tank::Update(const float DeltaTime)
 {
 }
+
+NS::Actor* NS::Tank::CreateCopy()
+{
+	return new Tank();
+}
+
+const char* NS::Tank::GetTypeInfo() const
+{
+	return "Tank";
+}

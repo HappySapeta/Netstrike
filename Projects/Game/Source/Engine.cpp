@@ -1,11 +1,14 @@
 ﻿#include "Engine/Engine.h"
 
+#include "Tank.h"
+
 std::unique_ptr<NS::Engine> NS::Engine::Instance_(nullptr);
 
 NS::Engine::Engine()
 	:Networking_(NS::Networking::Get())
 {
-	ActorConstructors_.insert({std::string("Actor"), Actor::GetStaticInstance()});
+	ActorConstructors_.insert({std::string("Actor"), std::make_unique<Actor>()});
+	ActorConstructors_.insert({std::string("Tank"), std::make_unique<Tank>()});
 }
 
 NS::Engine* NS::Engine::Get()
@@ -63,7 +66,7 @@ void NS::Engine::StopSubsystems()
 
 NS::Actor* NS::Engine::CreateActor(const std::string TypeInfo)
 {
-	Actors_.emplace_back(std::unique_ptr<Actor>(ActorConstructors_.at(TypeInfo)->CreateCopy()));
+	Actors_.emplace_back(ActorConstructors_.at(TypeInfo)->CreateCopy());
 	Actor* NewActor = Actors_.back().get();
 			
 	std::vector<ReplicatedProp> ReplicatedProps;
