@@ -7,8 +7,11 @@ std::unique_ptr<NS::Engine> NS::Engine::Instance_(nullptr);
 NS::Engine::Engine()
 	:Networking_(NS::Networking::Get())
 {
-	ActorConstructors_.insert({std::string("Actor"), std::make_unique<Actor>()});
-	ActorConstructors_.insert({std::string("Tank"), std::make_unique<Tank>()});
+	std::unique_ptr<Actor> TempActor = std::make_unique<Actor>();
+	ActorConstructors_.insert({TempActor->GetTypeInfo(), std::move(TempActor)});
+	
+	std::unique_ptr<Tank> TempTank = std::make_unique<Tank>();
+	ActorConstructors_.insert({TempTank->GetTypeInfo(), std::move(TempTank)});
 }
 
 NS::Engine* NS::Engine::Get()
@@ -64,9 +67,9 @@ void NS::Engine::StopSubsystems()
 	}
 }
 
-NS::Actor* NS::Engine::CreateActor(const std::string TypeInfo)
+NS::Actor* NS::Engine::CreateActor(const size_t TypeHash)
 {
-	Actors_.emplace_back(ActorConstructors_.at(TypeInfo)->CreateCopy());
+	Actors_.emplace_back(ActorConstructors_.at(TypeHash)->CreateCopy());
 	Actor* NewActor = Actors_.back().get();
 			
 	std::vector<ReplicatedProp> ReplicatedProps;

@@ -8,9 +8,9 @@ namespace NS
 	public:
 		Tank();
 		
+		[[nodiscard]] virtual Actor* CreateCopy() override;
 		virtual void Update(const float DeltaTime) override;
-		virtual const char* GetTypeInfo() const override;
-		Actor* CreateCopy() override;
+		virtual size_t GetTypeInfo() const override;
 
 	private:
 		class SpriteComponent* SpriteComp_ = nullptr;

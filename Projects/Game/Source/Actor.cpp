@@ -17,14 +17,13 @@ void NS::Actor::Update(const float DeltaTime)
 	}
 }
 
-const char* NS::Actor::GetTypeInfo() const
+size_t NS::Actor::GetTypeInfo() const
 {
-	return "Actor";
+	return typeid(this).hash_code();
 }
 
 NS::Actor* NS::Actor::CreateCopy()
 {
-	NSLOG(ELogLevel::INFO, "[CLIENT] Creating new actor");
 	return new Actor();
 }
 

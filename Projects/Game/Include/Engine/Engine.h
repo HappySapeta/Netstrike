@@ -45,7 +45,7 @@ namespace NS
 			
 			return static_cast<ActorType*>(NewActor);
 		}
-		Actor* CreateActor(const std::string TypeInfo);
+		Actor* CreateActor(const size_t TypeHash);
 		void DestroyActor(Actor* ActorToDestroy);
 		
 	private:
@@ -57,6 +57,6 @@ namespace NS
 		static std::unique_ptr<Engine> Instance_;
 		std::vector<std::unique_ptr<Actor>> Actors_;
 		NS::Networking* Networking_;
-		std::unordered_map<std::string, std::unique_ptr<Actor>> ActorConstructors_;
+		std::unordered_map<size_t, std::unique_ptr<Actor>> ActorConstructors_;
 	};
 }

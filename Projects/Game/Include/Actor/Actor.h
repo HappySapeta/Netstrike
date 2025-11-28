@@ -50,8 +50,8 @@ namespace NS
 			return FoundComponents;
 		}
 
-		virtual const char* GetTypeInfo() const;
-		virtual Actor* CreateCopy();
+		virtual size_t GetTypeInfo() const;
+		[[nodiscard]] virtual Actor* CreateCopy();
 
 	private:
 		
