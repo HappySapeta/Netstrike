@@ -130,9 +130,9 @@ void NS::Networking::Server_RegisterNewActor(const Actor* NewActor)
 	ActorCreationRequest.ActorId = NewActorId;
 	ActorCreationRequest.ObjectOffset = 0;
 	
-	const char* ActorTypeInfo = NewActor->GetTypeInfo();
-	ActorCreationRequest.DataSize = strlen(ActorTypeInfo) * sizeof(char);
-	memcpy_s(ActorCreationRequest.Data, NS::MAX_PACKET_SIZE, ActorTypeInfo, ActorCreationRequest.DataSize);
+	const size_t ActorTypeInfo = NewActor->GetTypeInfo();
+	ActorCreationRequest.DataSize = sizeof(ActorTypeInfo);
+	memcpy_s(ActorCreationRequest.Data, NS::MAX_PACKET_SIZE, &ActorTypeInfo, ActorCreationRequest.DataSize);
 	
 	PushRequest(ActorCreationRequest);
 }

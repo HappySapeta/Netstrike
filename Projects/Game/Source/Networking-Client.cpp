@@ -85,8 +85,10 @@ void NS::Networking::Client_ProcessRequests()
 
 void NS::Networking::Client_ProcessRequest_ActorCreate(const NetPacket& Packet)
 {
-	const std::string TypeInfo(Packet.Data, Packet.DataSize);
-	Actor* NewActor = Engine::Get()->CreateActor(TypeInfo);
+	size_t TypeHash;
+	memcpy_s(&TypeHash, sizeof(TypeHash), Packet.Data, Packet.DataSize);
+	
+	Actor* NewActor = Engine::Get()->CreateActor(TypeHash);
 	ActorRegistry_[NewActor] = Packet.ActorId;
 }
 
