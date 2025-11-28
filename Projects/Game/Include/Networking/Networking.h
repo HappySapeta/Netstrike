@@ -10,13 +10,6 @@ namespace NS
 {
 	class Networking
 	{
-		struct ReplicatedMemAttrib
-		{
-			void* SourcePtr;
-			void* DestinationPtr;
-			size_t SizeInBytes;
-		};
-
 	public:
 
 		[[nodiscard]] static Networking* Get();
