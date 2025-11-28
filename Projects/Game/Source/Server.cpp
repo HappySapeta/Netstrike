@@ -2,6 +2,7 @@
 #include <thread>
 
 #include "GameConfiguration.h"
+#include "Tank.h"
 #include "Engine/Engine.h"
 
 using HRClock = std::chrono::high_resolution_clock;
@@ -9,12 +10,14 @@ using TimePoint = std::chrono::high_resolution_clock::time_point;
 using Duration = std::chrono::duration<float>;
 
 static float DeltaTimeSecs = 0.016f;
-constexpr float Radius = 100.0f;
 
 int main()
 {
 	NS::Engine* Engine = NS::Engine::Get();
 	Engine->StartSubsystems();
+	
+	NS::Tank* Tank = Engine->CreateActor<NS::Tank>();
+	Tank->SetPosition({100.0f, 100.0f});
 	
 	while (true)
 	{
