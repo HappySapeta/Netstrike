@@ -1,17 +1,19 @@
 ﻿#include "Engine/Engine.h"
-
 #include "Tank.h"
+
+#define REGISTER_ACTOR(ActorType) \
+{ \
+std::unique_ptr<ActorType> TempActor = std::make_unique<ActorType>(); \
+ActorConstructors_.insert({TempActor->GetTypeInfo(), std::move(TempActor)}); \
+} \
 
 std::unique_ptr<NS::Engine> NS::Engine::Instance_(nullptr);
 
 NS::Engine::Engine()
 	:Networking_(NS::Networking::Get())
 {
-	std::unique_ptr<Actor> TempActor = std::make_unique<Actor>();
-	ActorConstructors_.insert({TempActor->GetTypeInfo(), std::move(TempActor)});
-	
-	std::unique_ptr<Tank> TempTank = std::make_unique<Tank>();
-	ActorConstructors_.insert({TempTank->GetTypeInfo(), std::move(TempTank)});
+	REGISTER_ACTOR(Actor);
+	REGISTER_ACTOR(Tank);
 }
 
 NS::Engine* NS::Engine::Get()
