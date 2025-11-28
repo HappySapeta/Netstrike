@@ -1,5 +1,6 @@
 ﻿#include <chrono>
 #include <thread>
+#include <random>
 
 #include "GameConfiguration.h"
 #include "Tank.h"
@@ -11,19 +12,29 @@ using Duration = std::chrono::duration<float>;
 
 static float DeltaTimeSecs = 0.016f;
 
+sf::Vector2f GetRandomPosition()
+{
+	std::random_device Device;
+	std::mt19937 Engine(Device());
+	std::uniform_int_distribution<int> DistributionX(0, NS::SCREEN_WIDTH);
+	std::uniform_int_distribution<int> DistributionY(0, NS::SCREEN_HEIGHT);
+	
+	return {static_cast<float>(DistributionX(Engine)), static_cast<float>(DistributionY(Engine))};
+}
+
 int main()
 {
 	NS::Engine* Engine = NS::Engine::Get();
 	Engine->StartSubsystems();
 	
 	NS::Tank* Tank = Engine->CreateActor<NS::Tank>();
-	Tank->SetPosition({100.0f, 100.0f});
 	
 	while (true)
 	{
 		static TimePoint TickStart;
 		TickStart = HRClock::now();
 		
+		Tank->SetPosition(GetRandomPosition());
 		Engine->Update(0.016f);
 
 		Duration TickDuration = HRClock::now() - TickStart;

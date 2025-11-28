@@ -4,7 +4,7 @@
 #include "Logger.h"
 #include "Engine/Engine.h"
 
-#define SHOW_ACTIVITY_INDICATOR
+//#define SHOW_ACTIVITY_INDICATOR
 
 int main()
 {
