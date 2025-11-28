@@ -39,6 +39,7 @@ namespace NS
 	private:
 		Networking() = default;
 		void UpdateThread();
+		sf::Socket::Status SendPacketHelper(sf::Packet& Packet, sf::TcpSocket& Socket);
 
 #ifdef NS_SERVER // All private server-only functions go here.
 		void Server_SendPackets();

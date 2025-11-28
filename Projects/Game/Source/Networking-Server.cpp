@@ -55,11 +55,7 @@ void NS::Networking::Server_SendPackets()
 				sf::TcpSocket& Socket = ConnectedClients_.at(Request.InstanceId)->Socket; // TODO : Major bug here. InstanceId can be -1.
 				sf::Packet Packet;
 				Packet << Request;
-				const auto SendStatus = Socket.send(Packet);
-				if (SendStatus == sf::Socket::Status::Error)
-				{
-					NSLOG(ELogLevel::ERROR, "[SERVER] Failed to send packet. {}:{}", Socket.getRemoteAddress()->toString(), Socket.getRemotePort());
-				}
+				SendPacketHelper(Packet, Socket);
 			}
 		}
 	}

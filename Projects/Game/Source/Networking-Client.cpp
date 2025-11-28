@@ -34,11 +34,7 @@ void NS::Networking::Client_SendPackets()
 		
 		if (Request.Reliability == EReliability::RELIABLE)
 		{
-			const auto SendStatus = TCPSocket_.send(Packet);
-			if (SendStatus != sf::Socket::Status::Done)
-			{
-				NSLOG(ELogLevel::ERROR, "[CLIENT] Failed to send packet to server!");
-			}
+			SendPacketHelper(Packet, TCPSocket_);
 		}
 	}
 }
@@ -87,17 +83,6 @@ void NS::Networking::Client_ProcessRequests()
 		}
 	}
 }
-
-//struct NetPacket
-//{
-//	EReliability Reliability;
-//	ERequestType RequestType;
-//	InstanceIdType InstanceId;
-//	IdentifierType ActorId;
-//	size_t ObjectOffset;
-//	size_t DataSize;
-//	char Data[NS::MAX_PACKET_SIZE];
-//};
 
 void NS::Networking::Client_ProcessRequest_Replication(const NetPacket& Packet)
 {

@@ -100,3 +100,14 @@ void NS::Networking::UpdateThread()
 #endif
 	}
 }
+
+sf::Socket::Status NS::Networking::SendPacketHelper(sf::Packet& Packet, sf::TcpSocket& Socket)
+{
+	const sf::Socket::Status& SendStatus = Socket.send(Packet);
+	if (SendStatus == sf::Socket::Status::Error)
+	{
+		NSLOG(ELogLevel::ERROR, "Failed to send packet. {}:{}", Socket.getRemoteAddress()->toString(), Socket.getRemotePort());
+	}
+	
+	return SendStatus;
+}
