@@ -1,7 +1,6 @@
 ﻿#include <functional>
 
 #include "Networking/Networking.h"
-#include "GameConfiguration.h"
 #include "Logger.h"
 #include "Actor/Actor.h"
 #include "Engine/Engine.h"
@@ -78,8 +77,6 @@ void NS::Networking::AddReplicateProps(const std::vector<ReplicatedProp>& Props)
 	{
 		if (ActorRegistry_.contains(Prop.ActorPtr))
 		{
-			const IdentifierType ActorId = ActorRegistry_.at(Prop.ActorPtr); // TODO : Fill actor registry.
-			ReplicationMap_[ActorId] = Prop;
 			ReplicatedProps_.push_back(Prop);
 		}
 	}

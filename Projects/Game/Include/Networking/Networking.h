@@ -84,7 +84,6 @@ namespace NS
 		bool StopRequested = false;
 		
 		std::vector<ReplicatedProp> ReplicatedProps_;
-		std::unordered_map<IdentifierType, ReplicatedProp> ReplicationMap_;
 		std::unordered_map<Actor*, IdentifierType> ActorRegistry_;
 	};
 }
