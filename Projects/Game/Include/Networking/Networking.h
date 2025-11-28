@@ -40,7 +40,7 @@ namespace NS
 #endif
 #ifdef NS_SERVER // All public server-only functions go here.
 		void Server_Listen();
-		void Server_RegisterNewActor(const Actor* NewActor);
+		void Server_RegisterNewActor(Actor* NewActor);
 #endif
 
 	private:
@@ -57,6 +57,7 @@ namespace NS
 		void Client_SendPackets();
 		void Client_ReceivePackets();
 		void Client_ProcessRequests();
+		void Client_ProcessRequest_Replication(const NetPacket& Packet);
 		void Client_ProcessRequest_ActorCreate(const NetPacket& Packet);
 #endif
 	
@@ -84,6 +85,6 @@ namespace NS
 		
 		std::vector<ReplicatedProp> ReplicatedProps_;
 		std::unordered_map<IdentifierType, ReplicatedProp> ReplicationMap_;
-		std::unordered_map<const Actor*, IdentifierType> ActorRegistry_;
+		std::unordered_map<Actor*, IdentifierType> ActorRegistry_;
 	};
 }

@@ -17,6 +17,8 @@ int main()
 	Engine->StartSubsystems();
 	
 	NS::Tank* Tank = Engine->CreateActor<NS::Tank>();
+	Tank->SetPosition({100.0f, 100.0f});
+	
 	while (true)
 	{
 		static TimePoint TickStart;

@@ -108,15 +108,16 @@ void NS::Networking::Server_ProcessRequests()
 		ReplicationRequest.InstanceId = 0; // TODO : Handle multiple clients
 		ReplicationRequest.ActorId = ActorId;
 		ReplicationRequest.ObjectOffset = Prop.Offset;
-		ReplicationRequest.DataSize = Prop.Size; 
-		void* DataPtr = Prop.ActorPtr + Prop.Offset;
+		ReplicationRequest.DataSize = Prop.Size;  
+		
+		void* DataPtr = reinterpret_cast<char*>(Prop.ActorPtr) + Prop.Offset;
 		memcpy_s(ReplicationRequest.Data, NS::MAX_PACKET_SIZE, DataPtr, Prop.Size);
 			
 		PushRequest(ReplicationRequest);
 	}
 }
 
-void NS::Networking::Server_RegisterNewActor(const Actor* NewActor)
+void NS::Networking::Server_RegisterNewActor(Actor* NewActor)
 {
 	// 1. add unique entry to registry
 	IdentifierType NewActorId = LastActorId++;

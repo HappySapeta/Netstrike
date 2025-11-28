@@ -12,10 +12,6 @@ NS::Tank::Tank()
 	}
 }
 
-void NS::Tank::Update(const float DeltaTime)
-{
-}
-
 NS::Actor* NS::Tank::CreateCopy()
 {
 	return new Tank();
@@ -24,4 +20,9 @@ NS::Actor* NS::Tank::CreateCopy()
 size_t NS::Tank::GetTypeInfo() const
 {
 	return typeid(this).hash_code();
+}
+
+void NS::Tank::GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties)
+{
+	OutReplicatedProperties.push_back({this, offsetof(Tank, Position_), sizeof(Position_)});
 }

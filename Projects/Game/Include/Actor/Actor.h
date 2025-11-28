@@ -8,15 +8,6 @@
 
 namespace NS
 {
-	struct Transform
-	{
-		Transform();
-		
-		sf::Vector2f Position;
-		sf::Vector2f Rotation;
-		sf::Vector2f Scale;
-	};
-
 	class Actor
 	{
 		friend class Engine;
@@ -26,11 +17,25 @@ namespace NS
 		virtual ~Actor() = default;
 
 	public:
+		
+		void SetPosition(const sf::Vector2f& NewPosition)
+		{
+			Num_ = 10;
+			Position_ = NewPosition;			
+		}
+		
+		sf::Vector2f GetPosition() const
+		{
+			return Position_;
+		}
+		
+	public:
 
 		template<class ComponentType, typename = std::enable_if_t<std::is_base_of_v<ActorComponent, ComponentType>>>
 		ComponentType* AddComponent()
 		{
 			Components_.push_back(std::make_unique<ComponentType>());
+			Components_.back()->Attach(this);
 			return static_cast<ComponentType*>(Components_.back().get());
 		}
 
@@ -60,8 +65,9 @@ namespace NS
 
 	protected:
 
+		uint8_t Num_ = 0;
+		sf::Vector2f Position_ = {0.0f, 0.0f};
 		float TestVariable = 0.0f;
-		Transform Transform_;
 		std::vector<std::unique_ptr<ActorComponent>> Components_;
 		
 	private:
