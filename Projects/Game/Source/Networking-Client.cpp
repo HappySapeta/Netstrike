@@ -79,8 +79,39 @@ void NS::Networking::Client_ProcessRequests()
 				Client_ProcessRequest_ActorCreate(Packet);
 				break;
 			}
+			case ERequestType::REPLICATION:
+			{
+				Client_ProcessRequest_Replication(Packet);
+				break;
+			}
 		}
 	}
+}
+
+//struct NetPacket
+//{
+//	EReliability Reliability;
+//	ERequestType RequestType;
+//	InstanceIdType InstanceId;
+//	IdentifierType ActorId;
+//	size_t ObjectOffset;
+//	size_t DataSize;
+//	char Data[NS::MAX_PACKET_SIZE];
+//};
+
+void NS::Networking::Client_ProcessRequest_Replication(const NetPacket& Packet)
+{
+	Actor* ActorPtr = nullptr;
+	for (const auto& [Ptr, ActorId] : ActorRegistry_)
+	{
+		if (ActorId == Packet.ActorId)
+		{
+			ActorPtr = Ptr;
+		}
+	}
+	
+	void* DataPtr = reinterpret_cast<char*>(ActorPtr) + Packet.ObjectOffset;
+	memcpy_s(DataPtr, Packet.DataSize, Packet.Data, Packet.DataSize);
 }
 
 void NS::Networking::Client_ProcessRequest_ActorCreate(const NetPacket& Packet)

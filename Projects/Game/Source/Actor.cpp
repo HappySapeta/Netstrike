@@ -5,10 +5,6 @@
 
 std::unique_ptr<NS::Actor> NS::Actor::StaticInstance_(nullptr);
 
-NS::Transform::Transform()
-	:Position({0,0}), Rotation({0,0}), Scale({1,1})
-{}
-
 void NS::Actor::Update(const float DeltaTime)
 {
 	for (const auto& Component : Components_)

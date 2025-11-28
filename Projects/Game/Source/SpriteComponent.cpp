@@ -7,6 +7,7 @@ void NS::SpriteComponent::Draw(sf::RenderWindow& RenderWindow)
 {
 	if (Sprite_)
 	{
+		Sprite_->setPosition(Parent->GetPosition());
 		RenderWindow.draw(*Sprite_);
 	}
 }

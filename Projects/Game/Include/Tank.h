@@ -6,17 +6,19 @@ namespace NS
 	class Tank : public NS::Actor
 	{
 	public:
+		
 		Tank();
 		
 		[[nodiscard]] virtual Actor* CreateCopy() override;
-		virtual void Update(const float DeltaTime) override;
 		virtual size_t GetTypeInfo() const override;
 
 	private:
-		class SpriteComponent* SpriteComp_ = nullptr;
-				
+
+		void GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties) override;
+	
 	private:
 		
+		class SpriteComponent* SpriteComp_ = nullptr;
 		static std::unique_ptr<Actor> StaticInstance_;
 	};
 }
