@@ -37,7 +37,7 @@ namespace NS
 		size_t Size;
 	};
 
-	struct NetPacket
+	struct NetRequest
 	{
 		EReliability Reliability;
 		ERequestType RequestType;
@@ -47,7 +47,13 @@ namespace NS
 		size_t DataSize;
 		char Data[NS::MAX_PACKET_SIZE];
 	};
+	
+	struct RPCRequest
+	{
+		IdentifierType ActorId;
+		size_t FunctionHash;
+	};
 
-	void operator<<(sf::Packet& Packet, const NS::NetPacket& Request);
-	void operator>>(sf::Packet & Packet, NS::NetPacket & Request);
+	void operator<<(sf::Packet& Packet, const NS::NetRequest& Request);
+	void operator>>(sf::Packet & Packet, NS::NetRequest & Request);
 }

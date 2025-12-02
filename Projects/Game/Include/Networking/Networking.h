@@ -17,7 +17,7 @@ namespace NS
 		void Stop();
 		
 		void AddReplicateProps(const std::vector<ReplicatedProp>& Props);
-		void PushRequest(const NetPacket& NewRequest);
+		void PushRequest(const NetRequest& NewRequest);
 
 #pragma region DELETED METHODS
 		Networking(const Networking&) = delete;
@@ -51,8 +51,8 @@ namespace NS
 		void Client_SendPackets();
 		void Client_ReceivePackets();
 		void Client_ProcessRequests();
-		void Client_ProcessRequest_Replication(const NetPacket& Packet);
-		void Client_ProcessRequest_ActorCreate(const NetPacket& Packet);
+		void Client_ProcessRequest_Replication(const NetRequest& Request);
+		void Client_ProcessRequest_ActorCreate(const NetRequest& Request);
 #endif
 	
 	private: // DATA MEMBERS
@@ -71,8 +71,8 @@ namespace NS
 		
 		static std::unique_ptr<Networking> Instance_;
 		
-		std::deque<NetPacket> IncomingPackets_;
-		std::deque<NetPacket> OutgoingPackets_;
+		std::deque<NetRequest> IncomingPackets_;
+		std::deque<NetRequest> OutgoingPackets_;
 		
 		std::thread NetworkUpdateThread_;
 		bool StopRequested = false;

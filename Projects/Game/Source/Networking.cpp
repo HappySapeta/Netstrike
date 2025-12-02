@@ -17,7 +17,7 @@ NS::Networking* NS::Networking::Get()
 	return Instance_.get();
 }
 
-void NS::operator<<(sf::Packet& Packet, const NS::NetPacket& Request)
+void NS::operator<<(sf::Packet& Packet, const NS::NetRequest& Request)
 {
 	Packet << static_cast<std::underlying_type_t<EReliability>>(Request.Reliability);
 	Packet << static_cast<std::underlying_type_t<ERequestType>>(Request.RequestType);
@@ -28,7 +28,7 @@ void NS::operator<<(sf::Packet& Packet, const NS::NetPacket& Request)
 	Packet.append(Request.Data, sizeof(Request.Data));
 }
 
-void NS::operator>>(sf::Packet& Packet, NS::NetPacket& Request)
+void NS::operator>>(sf::Packet& Packet, NS::NetRequest& Request)
 {
 	std::underlying_type_t<EReliability> ReliabilityData;
 	Packet >> ReliabilityData;
@@ -46,7 +46,7 @@ void NS::operator>>(sf::Packet& Packet, NS::NetPacket& Request)
 	memcpy(Request.Data, static_cast<const char*>(Packet.getData()) + Packet.getReadPosition(), sizeof(Request.Data));
 }
 
-void NS::Networking::PushRequest(const NetPacket& NewRequest)
+void NS::Networking::PushRequest(const NetRequest& NewRequest)
 {
 	OutgoingPackets_.push_back(NewRequest);
 }

@@ -26,7 +26,7 @@ void NS::Networking::Client_SendPackets()
 {
 	while (!OutgoingPackets_.empty())
 	{
-		NS::NetPacket Request = OutgoingPackets_.front();
+		NS::NetRequest Request = OutgoingPackets_.front();
 		OutgoingPackets_.pop_front();
 		
 		sf::Packet Packet;
@@ -53,7 +53,7 @@ void NS::Networking::Client_ReceivePackets()
 			}
 			else if (ReceiveStatus == sf::Socket::Status::Done)
 			{
-				NS::NetPacket Request;
+				NS::NetRequest Request;
 				Packet >> Request;
 				IncomingPackets_.emplace_back(Request);
 			}
@@ -65,7 +65,7 @@ void NS::Networking::Client_ProcessRequests()
 {
 	while (!IncomingPackets_.empty())
 	{
-		NetPacket Packet = IncomingPackets_.front();
+		NetRequest Packet = IncomingPackets_.front();
 		IncomingPackets_.pop_front();
 
 		switch (Packet.RequestType)
@@ -84,28 +84,28 @@ void NS::Networking::Client_ProcessRequests()
 	}
 }
 
-void NS::Networking::Client_ProcessRequest_Replication(const NetPacket& Packet)
+void NS::Networking::Client_ProcessRequest_Replication(const NetRequest& Request)
 {
 	Actor* ActorPtr = nullptr;
 	for (const auto& [Ptr, ActorId] : ActorRegistry_)
 	{
-		if (ActorId == Packet.ActorId)
+		if (ActorId == Request.ActorId)
 		{
 			ActorPtr = Ptr;
 		}
 	}
 	
-	void* DataPtr = reinterpret_cast<char*>(ActorPtr) + Packet.ObjectOffset;
-	memcpy_s(DataPtr, Packet.DataSize, Packet.Data, Packet.DataSize);
+	void* DataPtr = reinterpret_cast<char*>(ActorPtr) + Request.ObjectOffset;
+	memcpy_s(DataPtr, Request.DataSize, Request.Data, Request.DataSize);
 }
 
-void NS::Networking::Client_ProcessRequest_ActorCreate(const NetPacket& Packet)
+void NS::Networking::Client_ProcessRequest_ActorCreate(const NetRequest& Request)
 {
 	size_t TypeHash;
-	memcpy_s(&TypeHash, sizeof(TypeHash), Packet.Data, Packet.DataSize);
+	memcpy_s(&TypeHash, sizeof(TypeHash), Request.Data, Request.DataSize);
 	
 	Actor* NewActor = Engine::Get()->CreateActor(TypeHash);
-	ActorRegistry_[NewActor] = Packet.ActorId;
+	ActorRegistry_[NewActor] = Request.ActorId;
 }
 
 #endif
