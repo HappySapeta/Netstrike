@@ -82,6 +82,16 @@ void NS::Networking::AddReplicateProps(const std::vector<ReplicatedProp>& Props)
 	}
 }
 
+void NS::Networking::AddRPCProps(const std::vector<RPCProp>& RpcProps)
+{
+	std::hash<std::string> Hasher;
+	for (const RPCProp& Prop : RpcProps)
+	{
+		const size_t Hash = Hasher(Prop.FunctionName);
+		FunctionRegistry_[Hash] = Prop.Callback;
+	}
+}
+
 void NS::Networking::UpdateThread()
 {
 	while (!StopRequested)
@@ -101,19 +111,19 @@ void NS::Networking::UpdateThread()
 	}
 }
 
-void NS::Networking::ProcessRequest_RPC(const RPCRequest& RpcRequest)
+void NS::Networking::ProcessRequest_RPCReceived(const RPCReceived& RpcReceived)
 {
 	Actor* Actor = nullptr;
 	for (const auto& [Ptr, Id] : ActorRegistry_)
 	{
-		if (Id == RpcRequest.ActorId)
+		if (Id == RpcReceived.ActorId)
 		{
 			Actor = Ptr;
 			break;
 		}
 	}
 	
-	const auto RPC = FunctionRegistry_.at(RpcRequest.FunctionHash);
+	const auto RPC = FunctionRegistry_.at(RpcReceived.FunctionHash);
 	std::invoke(RPC, Actor);
 }
 

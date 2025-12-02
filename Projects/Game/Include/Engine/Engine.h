@@ -35,12 +35,16 @@ namespace NS
 			std::vector<ReplicatedProp> ReplicatedProps;
 			NewActor->GetReplicatedProperties(ReplicatedProps);
 			
+			std::vector<RPCProp> RpcProps;
+			NewActor->GetRPCSignatures(RpcProps);
+			
 			if (Networking_)
 			{
 #ifdef NS_SERVER
 				Networking_->Server_RegisterNewActor(NewActor);
 #endif
 				Networking_->AddReplicateProps(ReplicatedProps);
+				Networking_->AddRPCProps(RpcProps);
 			}
 			
 			return static_cast<ActorType*>(NewActor);

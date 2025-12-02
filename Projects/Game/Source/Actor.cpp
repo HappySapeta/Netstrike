@@ -30,6 +30,5 @@ void NS::Actor::GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutRepl
 
 void NS::Actor::GetRPCSignatures(std::vector<NS::RPCProp>& OutRpcProps)
 {
-	std::hash<std::string> Hasher;
-	OutRpcProps.push_back({Hasher("TestSomething")});
+	OutRpcProps.push_back({"TestSomething", std::bind(&NS::Actor::TestSomething, this)});
 }

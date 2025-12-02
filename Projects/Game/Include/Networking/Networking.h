@@ -18,6 +18,7 @@ namespace NS
 		void Stop();
 		
 		void AddReplicateProps(const std::vector<ReplicatedProp>& Props);
+		void AddRPCProps(const std::vector<RPCProp>& RpcProps);
 		void PushRequest(const NetRequest& NewRequest);
 
 #pragma region DELETED METHODS
@@ -30,7 +31,7 @@ namespace NS
 	public:
 
 #ifdef NS_CLIENT // A public client-only functions go here.
-		void Client_CallRPC(const RPCRequest& RpcRequest);
+		void Client_CallRPC(const RPCSent& RpcRequest);
 		void Client_ConnectToServer(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
 #endif
 #ifdef NS_SERVER // All public server-only functions go here.
@@ -41,7 +42,7 @@ namespace NS
 	private:
 		Networking() = default;
 		void UpdateThread();
-		void ProcessRequest_RPC(const RPCRequest& RpcRequest);
+		void ProcessRequest_RPCReceived(const RPCReceived& RpcRequest);
 		sf::Socket::Status SendPacketHelper(sf::Packet& Packet, sf::TcpSocket& Socket);
 
 #ifdef NS_SERVER // All private server-only functions go here.

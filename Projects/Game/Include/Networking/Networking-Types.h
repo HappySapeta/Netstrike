@@ -39,7 +39,8 @@ namespace NS
 	
 	struct RPCProp
 	{
-		size_t FunctionHash;
+		std::string FunctionName;
+		std::function<void(Actor*)> Callback;
 	};
 
 	struct NetRequest
@@ -53,12 +54,18 @@ namespace NS
 		char Data[NS::MAX_PACKET_SIZE];
 	};
 	
-	struct RPCRequest
+	struct RPCSent
+	{
+		Actor* Actor;
+		std::string FunctionName;
+	};
+	
+	struct RPCReceived
 	{
 		IdentifierType ActorId;
 		size_t FunctionHash;
 	};
 
 	void operator<<(sf::Packet& Packet, const NS::NetRequest& Request);
-	void operator>>(sf::Packet & Packet, NS::NetRequest & Request);
+	void operator>>(sf::Packet& Packet, NS::NetRequest & Request);
 }

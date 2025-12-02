@@ -121,8 +121,10 @@ void NS::Networking::Server_ProcessRequests()
 		{
 			case ERequestType::RPC:
 			{
-				RPCRequest RpcRequest;
-				ProcessRequest_RPC(RpcRequest);
+				RPCReceived RpcReceived;
+				RpcReceived.ActorId = Packet.ActorId;
+				memcpy_s(&RpcReceived.FunctionHash, sizeof(size_t), Packet.Data, Packet.DataSize);
+				ProcessRequest_RPCReceived(RpcReceived);
 				break;
 			}
 			default:

@@ -84,17 +84,20 @@ void NS::Networking::Client_ProcessRequests()
 	}
 }
 
-void NS::Networking::Client_CallRPC(const RPCRequest& RpcRequest)
+void NS::Networking::Client_CallRPC(const RPCSent& RpcRequest)
 {
 	NetRequest Request;
 	Request.Reliability = EReliability::RELIABLE;
 	Request.RequestType = ERequestType::RPC;
 	Request.InstanceId = 0;
-	Request.ActorId = RpcRequest.ActorId;
+	Request.ActorId = ActorRegistry_.at(RpcRequest.Actor);
 	Request.ObjectOffset = 0;
-	Request.DataSize = sizeof(RpcRequest.FunctionHash);
+	Request.DataSize = sizeof(size_t);
 	
-	memcpy_s(Request.Data, NS::MAX_PACKET_SIZE, &RpcRequest.FunctionHash, sizeof(RpcRequest.FunctionHash));
+	std::hash<std::string> Hasher;
+	size_t FunctionHash = Hasher(RpcRequest.FunctionName);
+	
+	memcpy_s(Request.Data, NS::MAX_PACKET_SIZE, &FunctionHash, sizeof(size_t)); // TODO : Use user defined type for hash.
 	
 	OutgoingPackets_.push_back(Request);
 }
