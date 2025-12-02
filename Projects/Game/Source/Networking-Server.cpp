@@ -47,7 +47,7 @@ void NS::Networking::Server_SendPackets()
 {
 	while (!OutgoingPackets_.empty())
 	{
-		NetPacket Request = OutgoingPackets_.front();
+		NetRequest Request = OutgoingPackets_.front();
 		OutgoingPackets_.pop_front();
 		{
 			if (Request.Reliability == EReliability::RELIABLE)
@@ -55,11 +55,7 @@ void NS::Networking::Server_SendPackets()
 				sf::TcpSocket& Socket = ConnectedClients_.at(Request.InstanceId)->Socket; // TODO : Major bug here. InstanceId can be -1.
 				sf::Packet Packet;
 				Packet << Request;
-				const auto SendStatus = Socket.send(Packet);
-				if (SendStatus == sf::Socket::Status::Error)
-				{
-					NSLOG(ELogLevel::ERROR, "[SERVER] Failed to send packet. {}:{}", Socket.getRemoteAddress()->toString(), Socket.getRemotePort());
-				}
+				SendPacketHelper(Packet, Socket);
 			}
 		}
 	}
@@ -84,7 +80,7 @@ void NS::Networking::Server_ReceivePackets()
 			}
 			else if (ReceiveStatus == sf::Socket::Status::Done)
 			{
-				NS::NetPacket Request;
+				NS::NetRequest Request;
 				Packet >> Request;
 				IncomingPackets_.emplace_back(Request);
 			}
@@ -102,7 +98,7 @@ void NS::Networking::Server_ProcessRequests()
 		}
 		
 		const IdentifierType ActorId = ActorRegistry_.at(Prop.ActorPtr);
-		NetPacket ReplicationRequest;
+		NetRequest ReplicationRequest;
 		ReplicationRequest.Reliability = EReliability::RELIABLE;
 		ReplicationRequest.RequestType = ERequestType::REPLICATION;
 		ReplicationRequest.InstanceId = 0; // TODO : Handle multiple clients
@@ -115,6 +111,27 @@ void NS::Networking::Server_ProcessRequests()
 			
 		PushRequest(ReplicationRequest);
 	}
+	
+	while (!IncomingPackets_.empty())
+	{
+		NetRequest Packet = IncomingPackets_.front();
+		IncomingPackets_.pop_front();
+
+		switch (Packet.RequestType)
+		{
+			case ERequestType::RPC:
+			{
+				RPCReceived RpcReceived;
+				RpcReceived.ActorId = Packet.ActorId;
+				memcpy_s(&RpcReceived.FunctionHash, sizeof(size_t), Packet.Data, Packet.DataSize);
+				ProcessRequest_RPCReceived(RpcReceived);
+				break;
+			}
+			default:
+				// Server doesn't process any other types of requests.
+				break;
+		}
+	}
 }
 
 void NS::Networking::Server_RegisterNewActor(Actor* NewActor)
@@ -124,7 +141,7 @@ void NS::Networking::Server_RegisterNewActor(Actor* NewActor)
 	ActorRegistry_[NewActor] = NewActorId;
 	
 	// 2. send packet to Clients
-	NetPacket ActorCreationRequest;
+	NetRequest ActorCreationRequest;
 	ActorCreationRequest.Reliability = EReliability::RELIABLE;
 	ActorCreationRequest.RequestType = ERequestType::ACTOR_CREATION;
 	ActorCreationRequest.InstanceId = 0;

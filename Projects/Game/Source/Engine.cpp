@@ -76,6 +76,9 @@ NS::Actor* NS::Engine::CreateActor(const size_t TypeHash)
 			
 	std::vector<ReplicatedProp> ReplicatedProps;
 	NewActor->GetReplicatedProperties(ReplicatedProps);
+	
+	std::vector<RPCProp> RpcProps;
+	NewActor->GetRPCSignatures(RpcProps);
 			
 	if (Networking_)
 	{
@@ -83,6 +86,7 @@ NS::Actor* NS::Engine::CreateActor(const size_t TypeHash)
 		Networking_->Server_RegisterNewActor(NewActor);
 #endif
 		Networking_->AddReplicateProps(ReplicatedProps);
+		Networking_->AddRPCProps(RpcProps);
 	}
 			
 	return NewActor;
