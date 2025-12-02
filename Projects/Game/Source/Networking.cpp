@@ -1,7 +1,6 @@
 ﻿#include <functional>
 
 #include "Networking/Networking.h"
-#include "GameConfiguration.h"
 #include "Logger.h"
 #include "Actor/Actor.h"
 #include "Engine/Engine.h"
@@ -18,7 +17,7 @@ NS::Networking* NS::Networking::Get()
 	return Instance_.get();
 }
 
-void NS::operator<<(sf::Packet& Packet, const NS::NetPacket& Request)
+void NS::operator<<(sf::Packet& Packet, const NS::NetRequest& Request)
 {
 	Packet << static_cast<std::underlying_type_t<EReliability>>(Request.Reliability);
 	Packet << static_cast<std::underlying_type_t<ERequestType>>(Request.RequestType);
@@ -29,7 +28,7 @@ void NS::operator<<(sf::Packet& Packet, const NS::NetPacket& Request)
 	Packet.append(Request.Data, sizeof(Request.Data));
 }
 
-void NS::operator>>(sf::Packet& Packet, NS::NetPacket& Request)
+void NS::operator>>(sf::Packet& Packet, NS::NetRequest& Request)
 {
 	std::underlying_type_t<EReliability> ReliabilityData;
 	Packet >> ReliabilityData;
@@ -47,7 +46,7 @@ void NS::operator>>(sf::Packet& Packet, NS::NetPacket& Request)
 	memcpy(Request.Data, static_cast<const char*>(Packet.getData()) + Packet.getReadPosition(), sizeof(Request.Data));
 }
 
-void NS::Networking::PushRequest(const NetPacket& NewRequest)
+void NS::Networking::PushRequest(const NetRequest& NewRequest)
 {
 	OutgoingPackets_.push_back(NewRequest);
 }
@@ -78,10 +77,18 @@ void NS::Networking::AddReplicateProps(const std::vector<ReplicatedProp>& Props)
 	{
 		if (ActorRegistry_.contains(Prop.ActorPtr))
 		{
-			const IdentifierType ActorId = ActorRegistry_.at(Prop.ActorPtr); // TODO : Fill actor registry.
-			ReplicationMap_[ActorId] = Prop;
 			ReplicatedProps_.push_back(Prop);
 		}
+	}
+}
+
+void NS::Networking::AddRPCProps(const std::vector<RPCProp>& RpcProps)
+{
+	std::hash<std::string> Hasher;
+	for (const RPCProp& Prop : RpcProps)
+	{
+		const size_t Hash = Hasher(Prop.FunctionName);
+		FunctionRegistry_[Hash] = Prop.Callback;
 	}
 }
 
@@ -102,4 +109,31 @@ void NS::Networking::UpdateThread()
 		Server_ProcessRequests();
 #endif
 	}
+}
+
+void NS::Networking::ProcessRequest_RPCReceived(const RPCReceived& RpcReceived)
+{
+	Actor* Actor = nullptr;
+	for (const auto& [Ptr, Id] : ActorRegistry_)
+	{
+		if (Id == RpcReceived.ActorId)
+		{
+			Actor = Ptr;
+			break;
+		}
+	}
+	
+	const auto RPC = FunctionRegistry_.at(RpcReceived.FunctionHash);
+	std::invoke(RPC, Actor);
+}
+
+sf::Socket::Status NS::Networking::SendPacketHelper(sf::Packet& Packet, sf::TcpSocket& Socket)
+{
+	const sf::Socket::Status& SendStatus = Socket.send(Packet);
+	if (SendStatus == sf::Socket::Status::Error)
+	{
+		NSLOG(ELogLevel::ERROR, "Failed to send packet. {}:{}", Socket.getRemoteAddress()->toString(), Socket.getRemotePort());
+	}
+	
+	return SendStatus;
 }
