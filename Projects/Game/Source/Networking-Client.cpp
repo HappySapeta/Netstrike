@@ -84,6 +84,21 @@ void NS::Networking::Client_ProcessRequests()
 	}
 }
 
+void NS::Networking::Client_CallRPC(const RPCRequest& RpcRequest)
+{
+	NetRequest Request;
+	Request.Reliability = EReliability::RELIABLE;
+	Request.RequestType = ERequestType::RPC;
+	Request.InstanceId = 0;
+	Request.ActorId = RpcRequest.ActorId;
+	Request.ObjectOffset = 0;
+	Request.DataSize = sizeof(RpcRequest.FunctionHash);
+	
+	memcpy_s(Request.Data, NS::MAX_PACKET_SIZE, &RpcRequest.FunctionHash, sizeof(RpcRequest.FunctionHash));
+	
+	OutgoingPackets_.push_back(Request);
+}
+
 void NS::Networking::Client_ProcessRequest_Replication(const NetRequest& Request)
 {
 	Actor* ActorPtr = nullptr;

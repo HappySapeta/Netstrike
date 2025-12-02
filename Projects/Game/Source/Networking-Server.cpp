@@ -111,6 +111,25 @@ void NS::Networking::Server_ProcessRequests()
 			
 		PushRequest(ReplicationRequest);
 	}
+	
+	while (!IncomingPackets_.empty())
+	{
+		NetRequest Packet = IncomingPackets_.front();
+		IncomingPackets_.pop_front();
+
+		switch (Packet.RequestType)
+		{
+			case ERequestType::RPC:
+			{
+				RPCRequest RpcRequest;
+				ProcessRequest_RPC(RpcRequest);
+				break;
+			}
+			default:
+				// Server doesn't process any other types of requests.
+				break;
+		}
+	}
 }
 
 void NS::Networking::Server_RegisterNewActor(Actor* NewActor)

@@ -2,6 +2,7 @@
 #include <deque>
 #include <memory>
 #include <thread>
+#include <functional>
 #include <unordered_map>
 
 #include "Networking-Types.h"
@@ -29,6 +30,7 @@ namespace NS
 	public:
 
 #ifdef NS_CLIENT // A public client-only functions go here.
+		void Client_CallRPC(const RPCRequest& RpcRequest);
 		void Client_ConnectToServer(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
 #endif
 #ifdef NS_SERVER // All public server-only functions go here.
@@ -39,6 +41,7 @@ namespace NS
 	private:
 		Networking() = default;
 		void UpdateThread();
+		void ProcessRequest_RPC(const RPCRequest& RpcRequest);
 		sf::Socket::Status SendPacketHelper(sf::Packet& Packet, sf::TcpSocket& Socket);
 
 #ifdef NS_SERVER // All private server-only functions go here.
@@ -69,7 +72,7 @@ namespace NS
 		sf::SocketSelector Client_Selector_;
 #endif
 		
-		static std::unique_ptr<Networking> Instance_;
+		static std::unique_ptr<Networking> Instance_; 
 		
 		std::deque<NetRequest> IncomingPackets_;
 		std::deque<NetRequest> OutgoingPackets_;
@@ -79,5 +82,6 @@ namespace NS
 		
 		std::vector<ReplicatedProp> ReplicatedProps_;
 		std::unordered_map<Actor*, IdentifierType> ActorRegistry_;
+		std::unordered_map<size_t, std::function<void(Actor*)>> FunctionRegistry_;
 	};
 }

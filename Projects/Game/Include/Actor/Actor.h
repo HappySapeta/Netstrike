@@ -3,6 +3,7 @@
 #include <SFML/System/Vector2.hpp>
 
 #include "ActorComponent.h"
+#include "Logger.h"
 #include "SpriteComponent.h"
 #include "Networking/Networking.h"
 
@@ -27,6 +28,11 @@ namespace NS
 		sf::Vector2f GetPosition() const
 		{
 			return Position_;
+		}
+		
+		void TestSomething()
+		{
+			NSLOG(ELogLevel::INFO, "TestSomething RPC invoked! {}", reinterpret_cast<uint64_t>(this));
 		}
 		
 	public:
@@ -61,6 +67,7 @@ namespace NS
 	private:
 		
 		virtual void GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties);
+		virtual void GetRPCSignatures(std::vector<NS::RPCProp>& OutRpcProps);
 		virtual void Update(const float DeltaTime);
 
 	protected:

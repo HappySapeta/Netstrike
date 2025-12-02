@@ -101,6 +101,22 @@ void NS::Networking::UpdateThread()
 	}
 }
 
+void NS::Networking::ProcessRequest_RPC(const RPCRequest& RpcRequest)
+{
+	Actor* Actor = nullptr;
+	for (const auto& [Ptr, Id] : ActorRegistry_)
+	{
+		if (Id == RpcRequest.ActorId)
+		{
+			Actor = Ptr;
+			break;
+		}
+	}
+	
+	const auto RPC = FunctionRegistry_.at(RpcRequest.FunctionHash);
+	std::invoke(RPC, Actor);
+}
+
 sf::Socket::Status NS::Networking::SendPacketHelper(sf::Packet& Packet, sf::TcpSocket& Socket)
 {
 	const sf::Socket::Status& SendStatus = Socket.send(Packet);

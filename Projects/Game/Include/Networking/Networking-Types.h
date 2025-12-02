@@ -36,6 +36,11 @@ namespace NS
 		size_t Offset;
 		size_t Size;
 	};
+	
+	struct RPCProp
+	{
+		size_t FunctionHash;
+	};
 
 	struct NetRequest
 	{
