@@ -80,6 +80,11 @@ void NS::Networking::Client_ProcessRequests()
 				Client_ProcessRequest_Replication(Packet);
 				break;
 			}
+			case ERequestType::RPC:
+			{
+				Client_ProcessRequest_RPC(Packet);
+				break;
+			}
 		}
 	}
 }
@@ -124,6 +129,14 @@ void NS::Networking::Client_ProcessRequest_ActorCreate(const NetRequest& Request
 	
 	Actor* NewActor = Engine::Get()->CreateActor(TypeHash);
 	ActorRegistry_[NewActor] = Request.ActorId;
+}
+
+void NS::Networking::Client_ProcessRequest_RPC(const NetRequest& Packet)
+{
+	RPCReceived RpcReceived;
+	RpcReceived.ActorId = Packet.ActorId;
+	memcpy_s(&RpcReceived.FunctionHash, sizeof(size_t), Packet.Data, Packet.DataSize);
+	ProcessRequest_RPCReceived(RpcReceived);
 }
 
 #endif

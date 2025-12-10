@@ -4,7 +4,24 @@
 #include "Actor/Actor.h"
 #include "Networking/Networking.h"
 
-// TODO: Use Non-blocking sockets if possible.
+void NS::Networking::Server_CallRPC(const RPCSent& RpcRequest, const Actor* Player)
+{
+	NetRequest Request;
+	Request.Reliability = EReliability::RELIABLE;
+	Request.RequestType = ERequestType::RPC;
+	Request.InstanceId = -1;
+	Request.ActorId = ActorRegistry_.at(RpcRequest.Actor);
+	Request.ObjectOffset = 0;
+	Request.DataSize = sizeof(size_t);
+	
+	std::hash<std::string> Hasher;
+	size_t FunctionHash = Hasher(RpcRequest.FunctionName);
+	
+	memcpy_s(Request.Data, NS::MAX_PACKET_SIZE, &FunctionHash, sizeof(size_t)); // TODO : Use user defined type for hash.
+	
+	OutgoingPackets_.push_back(Request);
+}
+
 void NS::Networking::Server_Listen()
 {
 	ListenerSocket_.close();
@@ -52,10 +69,23 @@ void NS::Networking::Server_SendPackets()
 		{
 			if (Request.Reliability == EReliability::RELIABLE)
 			{
-				sf::TcpSocket& Socket = ConnectedClients_.at(Request.InstanceId)->Socket; // TODO : Major bug here. InstanceId can be -1.
-				sf::Packet Packet;
-				Packet << Request;
-				SendPacketHelper(Packet, Socket);
+				if (Request.InstanceId != -1)
+				{
+					sf::TcpSocket& Socket = ConnectedClients_.at(Request.InstanceId)->Socket;
+					sf::Packet Packet;
+					Packet << Request;
+					SendPacketHelper(Packet, Socket);
+				}
+				else
+				{
+					for (const auto& Client : ConnectedClients_)
+					{
+						sf::TcpSocket& Socket = Client->Socket;
+						sf::Packet Packet;
+						Packet << Request;
+						SendPacketHelper(Packet, Socket);
+					}
+				}
 			}
 		}
 	}

@@ -35,6 +35,7 @@ namespace NS
 		void Client_ConnectToServer(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
 #endif
 #ifdef NS_SERVER // All public server-only functions go here.
+		void Server_CallRPC(const RPCSent& RpcRequest, const Actor* Player = nullptr);
 		void Server_Listen();
 		void Server_RegisterNewActor(Actor* NewActor);
 #endif
@@ -57,6 +58,7 @@ namespace NS
 		void Client_ProcessRequests();
 		void Client_ProcessRequest_Replication(const NetRequest& Request);
 		void Client_ProcessRequest_ActorCreate(const NetRequest& Request);
+		void Client_ProcessRequest_RPC(const NetRequest& Packet);
 #endif
 	
 	private: // DATA MEMBERS
