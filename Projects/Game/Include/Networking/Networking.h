@@ -59,6 +59,7 @@ namespace NS
 		void Client_ProcessRequest_Replication(const NetRequest& Request);
 		void Client_ProcessRequest_ActorCreate(const NetRequest& Request);
 		void Client_ProcessRequest_RPC(const NetRequest& Packet);
+		void Client_ProcessRequest_IDAssignment(const NetRequest& Packet);
 #endif
 	
 	private: // DATA MEMBERS
@@ -73,6 +74,7 @@ namespace NS
 #ifdef NS_CLIENT // A private client-only functions go here.
 		sf::TcpSocket TCPSocket_;
 		sf::SocketSelector Client_Selector_;
+		IdentifierType NetId_;
 #endif
 		
 		static std::unique_ptr<Networking> Instance_; 

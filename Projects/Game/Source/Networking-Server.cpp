@@ -56,6 +56,20 @@ void NS::Networking::Server_Listen()
 			NSLOG(ELogLevel::INFO, "[SERVER] Accepted connection from {}:{}", 
 				NewClient->Socket.getRemoteAddress()->toString(),
 				NewClient->Socket.getRemotePort());
+			
+			// Assign id to new client
+			{
+				NSLOG(ELogLevel::INFO, "Assigning NetId to Client {}", NewClient->ClientId);
+				NetRequest Request;
+				Request.Reliability = EReliability::RELIABLE;
+				Request.RequestType = ERequestType::ID_ASSIGNMENT;
+				Request.InstanceId = static_cast<InstanceIdType>(NewClient->ClientId);
+				Request.ActorId = 0;
+				Request.ObjectOffset = 0;
+				Request.DataSize = 0;
+			
+				PushRequest(Request);
+			}
 		}
 	}
 }

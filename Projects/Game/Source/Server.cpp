@@ -27,14 +27,11 @@ int main()
 	NS::Engine* Engine = NS::Engine::Get();
 	Engine->StartSubsystems();
 	
-	NS::Tank* Tank = Engine->CreateActor<NS::Tank>();
-	
 	while (true)
 	{
 		static TimePoint TickStart;
 		TickStart = HRClock::now();
 		
-		Tank->SetPosition(GetRandomPosition());
 		Engine->Update(0.016f);
 
 		Duration TickDuration = HRClock::now() - TickStart;
