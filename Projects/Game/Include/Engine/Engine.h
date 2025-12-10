@@ -27,7 +27,7 @@ namespace NS
 	public:
 
 		template<class ActorType, class... ParameterTypes>
-		ActorType* CreateActor(ParameterTypes&&... Args)
+		ActorType* CreateActor(IdentifierType AuthNetId = -1, ParameterTypes&&... Args)
 		{
 			Actors_.emplace_back(std::make_unique<ActorType>(std::forward<ParameterTypes>(Args)...));
 			Actor* NewActor = Actors_.back().get();
@@ -41,7 +41,7 @@ namespace NS
 			if (Networking_)
 			{
 #ifdef NS_SERVER
-				Networking_->Server_RegisterNewActor(NewActor);
+				Networking_->Server_RegisterNewActor(NewActor, AuthNetId);
 #endif
 				Networking_->AddReplicateProps(ReplicatedProps);
 				Networking_->AddRPCProps(RpcProps);

@@ -22,9 +22,16 @@ sf::Vector2f GetRandomPosition()
 	return {static_cast<float>(DistributionX(Engine)), static_cast<float>(DistributionY(Engine))};
 }
 
+void OnClientConnected(const NS::NetClient* NewClient)
+{
+	NSLOG(NS::ELogLevel::INFO, "New client connected : {}", NewClient->ClientId);
+	NS::Tank* NewTank = NS::Engine::Get()->CreateActor<NS::Tank>(NewClient->ClientId);
+}
+
 int main()
 {
 	NS::Engine* Engine = NS::Engine::Get();
+	NS::Networking::Get()->Server_AssignOnClientConnected(&OnClientConnected);
 	Engine->StartSubsystems();
 	
 	while (true)

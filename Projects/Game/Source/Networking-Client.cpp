@@ -132,6 +132,11 @@ void NS::Networking::Client_ProcessRequest_ActorCreate(const NetRequest& Request
 	size_t TypeHash;
 	memcpy_s(&TypeHash, sizeof(TypeHash), Request.Data, Request.DataSize);
 	
+	if (Request.InstanceId == NetId_)
+	{
+		NSLOG(ELogLevel::INFO, "Actor created for me! {}", Request.InstanceId);
+	}
+	
 	Actor* NewActor = Engine::Get()->CreateActor(TypeHash);
 	ActorRegistry_[NewActor] = Request.ActorId;
 }

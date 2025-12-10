@@ -83,7 +83,7 @@ NS::Actor* NS::Engine::CreateActor(const size_t TypeHash)
 	if (Networking_)
 	{
 #ifdef NS_SERVER
-		Networking_->Server_RegisterNewActor(NewActor);
+		// Networking_->Server_RegisterNewActor(NewActor);
 #endif
 		Networking_->AddReplicateProps(ReplicatedProps);
 		Networking_->AddRPCProps(RpcProps);

@@ -70,8 +70,15 @@ void NS::Networking::Server_Listen()
 			
 				PushRequest(Request);
 			}
+			
+			OnClientConnected(NewClient.get());
 		}
 	}
+}
+
+void NS::Networking::Server_AssignOnClientConnected(OnClientConnectedDelegate Callback)
+{
+	OnClientConnected = Callback;
 }
 
 void NS::Networking::Server_SendPackets()
@@ -83,7 +90,7 @@ void NS::Networking::Server_SendPackets()
 		{
 			if (Request.Reliability == EReliability::RELIABLE)
 			{
-				if (Request.InstanceId != -1)
+				if (Request.InstanceId != -1 && Request.RequestType != ERequestType::ACTOR_CREATION)
 				{
 					sf::TcpSocket& Socket = ConnectedClients_.at(Request.InstanceId)->Socket;
 					sf::Packet Packet;
@@ -178,7 +185,7 @@ void NS::Networking::Server_ProcessRequests()
 	}
 }
 
-void NS::Networking::Server_RegisterNewActor(Actor* NewActor)
+void NS::Networking::Server_RegisterNewActor(Actor* NewActor, const NS::IdentifierType AuthNetId)
 {
 	// 1. add unique entry to registry
 	IdentifierType NewActorId = LastActorId++;
@@ -188,7 +195,7 @@ void NS::Networking::Server_RegisterNewActor(Actor* NewActor)
 	NetRequest ActorCreationRequest;
 	ActorCreationRequest.Reliability = EReliability::RELIABLE;
 	ActorCreationRequest.RequestType = ERequestType::ACTOR_CREATION;
-	ActorCreationRequest.InstanceId = 0;
+	ActorCreationRequest.InstanceId = static_cast<InstanceIdType>(AuthNetId);
 	ActorCreationRequest.ActorId = NewActorId;
 	ActorCreationRequest.ObjectOffset = 0;
 	

@@ -11,9 +11,10 @@ void NS::Actor::Update(const float DeltaTime)
 	{
 		Component->Update(DeltaTime);
 	}
-#ifdef NS_SERVER
-	NS::Networking::Get()->Server_CallRPC({this, "TestSomething"});
-#endif
+// Uncomment to test Server to Client RPC.
+//#ifdef NS_SERVER
+//	NS::Networking::Get()->Server_CallRPC({this, "TestSomething"});
+//#endif
 }
 
 size_t NS::Actor::GetTypeInfo() const
