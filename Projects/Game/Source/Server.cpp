@@ -26,6 +26,8 @@ void OnClientConnected(const NS::NetClient* NewClient)
 {
 	NSLOG(NS::ELogLevel::INFO, "New client connected : {}", NewClient->ClientId);
 	NS::Tank* NewTank = NS::Engine::Get()->CreateActor<NS::Tank>(NewClient->ClientId);
+	
+	NewTank->SetPosition(GetRandomPosition());
 }
 
 int main()

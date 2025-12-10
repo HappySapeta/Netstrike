@@ -152,7 +152,7 @@ void NS::Networking::Server_ProcessRequests()
 		NetRequest ReplicationRequest;
 		ReplicationRequest.Reliability = EReliability::RELIABLE;
 		ReplicationRequest.RequestType = ERequestType::REPLICATION;
-		ReplicationRequest.InstanceId = 0; // TODO : Handle multiple clients
+		ReplicationRequest.InstanceId = -1;
 		ReplicationRequest.ActorId = ActorId;
 		ReplicationRequest.ObjectOffset = Prop.Offset;
 		ReplicationRequest.DataSize = Prop.Size;  

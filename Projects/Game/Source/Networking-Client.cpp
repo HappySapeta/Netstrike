@@ -4,7 +4,6 @@
 #include "Engine/Engine.h"
 #include "Networking/Networking.h"
 
-// TODO: Use Non-blocking sockets if possible.
 void NS::Networking::Client_ConnectToServer(const sf::IpAddress& ServerAddress, const uint16_t ServerPort)
 {
 	TCPSocket_.disconnect();
