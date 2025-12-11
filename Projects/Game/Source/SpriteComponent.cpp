@@ -7,7 +7,9 @@ void NS::SpriteComponent::Draw(sf::RenderWindow& RenderWindow)
 {
 	if (Sprite_)
 	{
-		Sprite_->setPosition(Parent->GetPosition());
+		Sprite_->setOrigin((sf::Vector2f)Texture_->getSize() / 2.0f);
+		Sprite_->setPosition(Position_);
+		Sprite_->setRotation(Rotation_ + sf::degrees(-90));
 		RenderWindow.draw(*Sprite_);
 	}
 }

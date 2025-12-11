@@ -29,10 +29,12 @@ namespace NS
 			return Position_;
 		}
 		
-		void TestSomething()
-		{
-			NSLOG(ELogLevel::INFO, "TestSomething RPC invoked! {}", reinterpret_cast<uint64_t>(this));
-		}
+		//void TestSomething()
+		//{
+		//	NSLOG(ELogLevel::INFO, "TestSomething RPC invoked! {}", reinterpret_cast<uint64_t>(this));
+		//}
+		
+		virtual void Update(const float DeltaTime);
 		
 	public:
 
@@ -77,7 +79,6 @@ namespace NS
 		
 		virtual void GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties);
 		virtual void GetRPCSignatures(std::vector<NS::RPCProp>& OutRpcProps);
-		virtual void Update(const float DeltaTime);
 
 	protected:
 

@@ -1,21 +1,41 @@
-#include <random>
 #include <SFML/Graphics.hpp>
 
 #include "GameConfiguration.h"
 #include "Logger.h"
 #include "Tank.h"
 #include "Engine/Engine.h"
+#include "Input.h"
 
-//#define SHOW_ACTIVITY_INDICATOR
+NS::Tank* PlayerTank = nullptr;
 
-sf::Vector2f GetRandomPosition()
+void MoveTankVertical(const float Input)
 {
-	std::random_device Device;
-	std::mt19937 Engine(Device());
-	std::uniform_int_distribution<int> DistributionX(0, NS::SCREEN_WIDTH);
-	std::uniform_int_distribution<int> DistributionY(0, NS::SCREEN_HEIGHT);
-	
-	return {static_cast<float>(DistributionX(Engine)), static_cast<float>(DistributionY(Engine))};
+	if (PlayerTank)
+	{
+		if (Input > 0)
+		{
+			PlayerTank->MoveForward();
+		}
+		else if (Input < 0)
+		{
+			PlayerTank->MoveBackward();
+		}
+	}
+}
+
+void TurnTank(const float Input)
+{
+	if (PlayerTank)
+	{
+		if (Input > 0)
+		{
+			PlayerTank->TurnRight();
+		}
+		else if (Input < 0)
+		{
+			PlayerTank->TurnLeft();
+		}
+	}
 }
 
 int main()
@@ -23,31 +43,26 @@ int main()
 	NS::Engine* Engine = NS::Engine::Get();
 	sf::RenderWindow Window(sf::VideoMode({NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT}), "!! N E T S T R I K E !!");
 	
-#ifdef SHOW_ACTIVITY_INDICATOR
-	sf::RectangleShape Square({100,100});
-	Square.setPosition({NS::SCREEN_WIDTH / 2.0f, NS::SCREEN_HEIGHT / 2.0f});
-	Square.setFillColor(sf::Color::White);
-#endif
-	
 	Engine->StartSubsystems();
-	NS::Tank* PlayerTank = nullptr;
+	
+	NS::Input* Input = NS::Input::Get();
+	Input->BindAxisVertical(&MoveTankVertical);
+	Input->BindAxisHorizontal(&TurnTank);
 	
 	while (Window.isOpen())
 	{
 		const std::optional<sf::Event> Event = Window.pollEvent();
-		if (Event)
+		if (Event && Window.hasFocus())
 		{
 			if (Event->is<sf::Event::Closed>())
 			{
 				Window.close();
 			}
+			
+			NS::Input::Get()->Update(Event);
 		}
 		
-		if (PlayerTank)
-		{
-			PlayerTank->RPC_MoveRandom();
-		}
-		else
+		if (!PlayerTank)
 		{
 			PlayerTank = NS::Engine::Get()->GetOwnedActor<NS::Tank>();
 		}
@@ -58,13 +73,6 @@ int main()
 		{
 			Window.clear();
 			Engine->Draw(Window);
-#ifdef SHOW_ACTIVITY_INDICATOR
-			// Activity indicator
-			{
-				Square.rotate(sf::degrees(1.0f));
-				Window.draw(Square);
-			}
-#endif
 			Window.display();
 		}
 	}

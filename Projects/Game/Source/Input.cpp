@@ -94,8 +94,7 @@ void NS::Input::HandleAxes()
 	{
 		HorizontalValue += 1.0f;
 	}
-	
-	if (sf::Keyboard::isKeyPressed(NS::NegativeHorizontal))
+	else if (sf::Keyboard::isKeyPressed(NS::NegativeHorizontal))
 	{
 		HorizontalValue -= 1.0f;
 	}
@@ -105,8 +104,7 @@ void NS::Input::HandleAxes()
 	{
 		VerticalValue += 1.0f;
 	}
-	
-	if (sf::Keyboard::isKeyPressed(NS::NegativeVertical))
+	else if (sf::Keyboard::isKeyPressed(NS::NegativeVertical))
 	{
 		VerticalValue -= 1.0f;
 	}

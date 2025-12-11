@@ -1,16 +1,18 @@
 ﻿#include "Tank.h"
-
-#include <random>
-
-#include "Logger.h"
 #include "Actor/SpriteComponent.h"
+
+constexpr float MOVEMENT_SPEED = 2.0f;
+constexpr float TURN_RATE = 2.0f;
+const char* TANK_TEXTURE = "Textures\\Tank.png";
 
 NS::Tank::Tank()
 {
+	Heading_ = {0, -1};
+	
 	SpriteComp_ = AddComponent<SpriteComponent>();
 	if (SpriteComp_)
 	{
-		SpriteComp_->SetTexture("Textures\\Tank.png");
+		SpriteComp_->SetTexture(TANK_TEXTURE);
 	}
 }
 
@@ -24,42 +26,98 @@ size_t NS::Tank::GetTypeInfo() const
 	return typeid(this).hash_code();
 }
 
-void NS::Tank::RPC_MoveRandom()
+void NS::Tank::MoveForward()
 {
 #ifdef NS_CLIENT
-	NS::Networking::Get()->Client_CallRPC({this, "MoveTank"});
+	NS::Networking::Get()->Client_CallRPC({this, "Server_MoveTankForward"});
 #endif
 }
 
-static sf::Vector2f GetRandomPosition()
+void NS::Tank::MoveBackward()
 {
-	std::random_device Device;
-	std::mt19937 Engine(Device());
-	std::uniform_int_distribution<int> DistributionX(0, NS::SCREEN_WIDTH);
-	std::uniform_int_distribution<int> DistributionY(0, NS::SCREEN_HEIGHT);
-	
-	return {static_cast<float>(DistributionX(Engine)), static_cast<float>(DistributionY(Engine))};
+#ifdef NS_CLIENT
+	NS::Networking::Get()->Client_CallRPC({this, "Server_MoveTankBackward"});
+#endif
 }
 
-void NS::Tank::MoveTank()
+void NS::Tank::TurnRight()
 {
-#ifdef NS_SERVER
-	SetPosition(GetRandomPosition());
+#ifdef NS_CLIENT
+	NS::Networking::Get()->Client_CallRPC({this, "Server_TurnRight"});
 #endif
+}
+
+void NS::Tank::TurnLeft()
+{
+#ifdef NS_CLIENT
+	NS::Networking::Get()->Client_CallRPC({this, "Server_TurnLeft"});
+#endif
+}
+
+void NS::Tank::Server_MoveTankForward()
+{
+	SetPosition(GetPosition() + Heading_ * MOVEMENT_SPEED);
+}
+
+void NS::Tank::Server_MoveTankBackward()
+{
+	SetPosition(GetPosition() - Heading_ * MOVEMENT_SPEED);
+}
+
+void NS::Tank::Server_TurnLeft()
+{
+	Heading_ = Heading_.rotatedBy(sf::degrees(-TURN_RATE));
+}
+
+void NS::Tank::Server_TurnRight()
+{
+	Heading_ = Heading_.rotatedBy(sf::degrees(TURN_RATE));
 }
 
 void NS::Tank::GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties)
 {
 	OutReplicatedProperties.push_back({this, offsetof(Tank, Position_), sizeof(Position_)});
+	OutReplicatedProperties.push_back({this, offsetof(Tank, Heading_), sizeof(Heading_)});
 }
 
 void NS::Tank::GetRPCSignatures(std::vector<NS::RPCProp>& OutRpcProps)
 {
-	OutRpcProps.push_back({"MoveTank", [](Actor* Actor)
+	OutRpcProps.push_back({"Server_MoveTankForward", [](Actor* Actor)
 	{
 		if (Tank* TankPtr = dynamic_cast<Tank*>(Actor))
 		{
-			TankPtr->MoveTank();
+			TankPtr->Server_MoveTankForward();
 		}
 	}});
+	
+	OutRpcProps.push_back({"Server_MoveTankBackward", [](Actor* Actor)
+	{
+		if (Tank* TankPtr = dynamic_cast<Tank*>(Actor))
+		{
+			TankPtr->Server_MoveTankBackward();
+		}
+	}});
+	
+	OutRpcProps.push_back({"Server_TurnLeft", [](Actor* Actor)
+	{
+		if (Tank* TankPtr = dynamic_cast<Tank*>(Actor))
+		{
+			TankPtr->Server_TurnLeft();
+		}
+	}});
+	
+	OutRpcProps.push_back({"Server_TurnRight", [](Actor* Actor)
+	{
+		if (Tank* TankPtr = dynamic_cast<Tank*>(Actor)) 
+		{
+			TankPtr->Server_TurnRight();
+		}
+	}});
+}
+
+void NS::Tank::Update(const float DeltaTime)
+{
+	Actor::Update(DeltaTime);
+	SpriteComp_->SetRotation(Heading_.angle());
+	SpriteComp_->SetPosition(Position_);
 }
