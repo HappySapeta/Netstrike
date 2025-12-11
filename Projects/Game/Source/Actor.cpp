@@ -29,10 +29,10 @@ NS::Actor* NS::Actor::CreateCopy()
 
 void NS::Actor::GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties)
 {
-	OutReplicatedProperties.push_back({this, offsetof(Actor, TestVariable), sizeof(TestVariable)});
+	// OutReplicatedProperties.push_back({this, offsetof(Actor, TestVariable), sizeof(TestVariable)});
 }
 
 void NS::Actor::GetRPCSignatures(std::vector<NS::RPCProp>& OutRpcProps)
 {
-	OutRpcProps.push_back({"TestSomething", std::bind(&NS::Actor::TestSomething, this)});
+	// OutRpcProps.push_back({"TestSomething", std::bind(&NS::Actor::TestSomething, std::placeholders::_1)});
 }

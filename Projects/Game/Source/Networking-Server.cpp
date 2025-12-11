@@ -19,7 +19,7 @@ void NS::Networking::Server_CallRPC(const RPCSent& RpcRequest, const Actor* Play
 	
 	memcpy_s(Request.Data, NS::MAX_PACKET_SIZE, &FunctionHash, sizeof(size_t)); // TODO : Use user defined type for hash.
 	
-	OutgoingPackets_.push_back(Request);
+	PushRequest(Request);
 }
 
 void NS::Networking::Server_Listen()

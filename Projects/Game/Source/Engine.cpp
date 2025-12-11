@@ -69,6 +69,17 @@ void NS::Engine::StopSubsystems()
 	}
 }
 
+std::vector<NS::Actor*> NS::Engine::GetActors() const
+{
+	std::vector<NS::Actor*> Ptrs;
+	for (const auto& Actor : Actors_)
+	{
+		Ptrs.push_back(Actor.get());
+	}
+	
+	return Ptrs;
+}
+
 NS::Actor* NS::Engine::CreateActor(const size_t TypeHash)
 {
 	Actors_.emplace_back(ActorConstructors_.at(TypeHash)->CreateCopy());

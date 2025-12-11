@@ -21,7 +21,6 @@ namespace NS
 		
 		void SetPosition(const sf::Vector2f& NewPosition)
 		{
-			Num_ = 10;
 			Position_ = NewPosition;			
 		}
 		
@@ -63,6 +62,16 @@ namespace NS
 
 		virtual size_t GetTypeInfo() const;
 		[[nodiscard]] virtual Actor* CreateCopy();
+		
+		void SetNetId(IdentifierType NewNetId)
+		{
+			NetId_ = NewNetId;
+		}
+		
+		IdentifierType GetNetId() const
+		{
+			return NetId_;
+		}
 
 	private:
 		
@@ -72,13 +81,12 @@ namespace NS
 
 	protected:
 
-		uint8_t Num_ = 0;
 		sf::Vector2f Position_ = {0.0f, 0.0f};
-		float TestVariable = 0.0f;
 		std::vector<std::unique_ptr<ActorComponent>> Components_;
 		
 	private:
 		
 		static std::unique_ptr<Actor> StaticInstance_;
+		IdentifierType NetId_ = -1;
 	};
 }

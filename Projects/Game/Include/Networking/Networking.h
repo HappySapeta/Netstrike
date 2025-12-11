@@ -31,6 +31,10 @@ namespace NS
 	public:
 
 #ifdef NS_CLIENT // A public client-only functions go here.
+		IdentifierType Client_GetNetId() const
+		{
+			return NetId_;
+		}
 		void Client_CallRPC(const RPCSent& RpcRequest);
 		void Client_ConnectToServer(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
 #endif

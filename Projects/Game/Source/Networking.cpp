@@ -88,7 +88,7 @@ void NS::Networking::AddRPCProps(const std::vector<RPCProp>& RpcProps)
 	for (const RPCProp& Prop : RpcProps)
 	{
 		const size_t Hash = Hasher(Prop.FunctionName);
-		FunctionRegistry_[Hash] = Prop.Callback;
+		 FunctionRegistry_[Hash] = Prop.Callback;
 	}
 }
 

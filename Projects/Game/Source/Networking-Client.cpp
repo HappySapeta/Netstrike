@@ -137,6 +137,7 @@ void NS::Networking::Client_ProcessRequest_ActorCreate(const NetRequest& Request
 	}
 	
 	Actor* NewActor = Engine::Get()->CreateActor(TypeHash);
+	NewActor->SetNetId(NetId_);
 	ActorRegistry_[NewActor] = Request.ActorId;
 }
 

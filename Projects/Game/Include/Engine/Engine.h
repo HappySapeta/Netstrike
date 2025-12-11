@@ -16,7 +16,8 @@ namespace NS
 		void Draw(sf::RenderWindow& Window);
 		void StartSubsystems();
 		void StopSubsystems();
-		
+		std::vector<NS::Actor*> GetActors() const;
+
 #pragma region DELETED METHODS
 		Engine(const Engine&) = delete;
 		Engine(Engine&&) = delete;
