@@ -31,12 +31,18 @@ namespace NS
 	public:
 
 #ifdef NS_CLIENT // A public client-only functions go here.
+		IdentifierType Client_GetNetId() const
+		{
+			return NetId_;
+		}
 		void Client_CallRPC(const RPCSent& RpcRequest);
 		void Client_ConnectToServer(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
 #endif
 #ifdef NS_SERVER // All public server-only functions go here.
+		void Server_AssignOnClientConnected(OnClientConnectedDelegate Callback);
+		void Server_CallRPC(const RPCSent& RpcRequest, const Actor* Player = nullptr);
 		void Server_Listen();
-		void Server_RegisterNewActor(Actor* NewActor);
+		void Server_RegisterNewActor(Actor* NewActor, IdentifierType AuthNetId = -1);
 #endif
 
 	private:
@@ -57,6 +63,8 @@ namespace NS
 		void Client_ProcessRequests();
 		void Client_ProcessRequest_Replication(const NetRequest& Request);
 		void Client_ProcessRequest_ActorCreate(const NetRequest& Request);
+		void Client_ProcessRequest_RPC(const NetRequest& Packet);
+		void Client_ProcessRequest_IDAssignment(const NetRequest& Packet);
 #endif
 	
 	private: // DATA MEMBERS
@@ -66,11 +74,13 @@ namespace NS
 		std::vector<std::unique_ptr<NetClient>> ConnectedClients_;
 		sf::SocketSelector Server_Selector_;
 		IdentifierType LastActorId = 0;
+		OnClientConnectedDelegate OnClientConnected;
 #endif
 
 #ifdef NS_CLIENT // A private client-only functions go here.
 		sf::TcpSocket TCPSocket_;
 		sf::SocketSelector Client_Selector_;
+		IdentifierType NetId_ = -1;
 #endif
 		
 		static std::unique_ptr<Networking> Instance_; 

@@ -4,7 +4,24 @@
 #include "Actor/Actor.h"
 #include "Networking/Networking.h"
 
-// TODO: Use Non-blocking sockets if possible.
+void NS::Networking::Server_CallRPC(const RPCSent& RpcRequest, const Actor* Player)
+{
+	NetRequest Request;
+	Request.Reliability = EReliability::RELIABLE;
+	Request.RequestType = ERequestType::RPC;
+	Request.InstanceId = -1;
+	Request.ActorId = ActorRegistry_.at(RpcRequest.Actor);
+	Request.ObjectOffset = 0;
+	Request.DataSize = sizeof(size_t);
+	
+	std::hash<std::string> Hasher;
+	size_t FunctionHash = Hasher(RpcRequest.FunctionName);
+	
+	memcpy_s(Request.Data, NS::MAX_PACKET_SIZE, &FunctionHash, sizeof(size_t)); // TODO : Use user defined type for hash.
+	
+	PushRequest(Request);
+}
+
 void NS::Networking::Server_Listen()
 {
 	ListenerSocket_.close();
@@ -39,8 +56,29 @@ void NS::Networking::Server_Listen()
 			NSLOG(ELogLevel::INFO, "[SERVER] Accepted connection from {}:{}", 
 				NewClient->Socket.getRemoteAddress()->toString(),
 				NewClient->Socket.getRemotePort());
+			
+			// Assign id to new client
+			{
+				NSLOG(ELogLevel::INFO, "Assigning NetId to Client {}", NewClient->ClientId);
+				NetRequest Request;
+				Request.Reliability = EReliability::RELIABLE;
+				Request.RequestType = ERequestType::ID_ASSIGNMENT;
+				Request.InstanceId = static_cast<InstanceIdType>(NewClient->ClientId);
+				Request.ActorId = 0;
+				Request.ObjectOffset = 0;
+				Request.DataSize = 0;
+			
+				PushRequest(Request);
+			}
+			
+			OnClientConnected(NewClient.get());
 		}
 	}
+}
+
+void NS::Networking::Server_AssignOnClientConnected(OnClientConnectedDelegate Callback)
+{
+	OnClientConnected = Callback;
 }
 
 void NS::Networking::Server_SendPackets()
@@ -52,10 +90,23 @@ void NS::Networking::Server_SendPackets()
 		{
 			if (Request.Reliability == EReliability::RELIABLE)
 			{
-				sf::TcpSocket& Socket = ConnectedClients_.at(Request.InstanceId)->Socket; // TODO : Major bug here. InstanceId can be -1.
-				sf::Packet Packet;
-				Packet << Request;
-				SendPacketHelper(Packet, Socket);
+				if (Request.InstanceId != -1 && Request.RequestType != ERequestType::ACTOR_CREATION)
+				{
+					sf::TcpSocket& Socket = ConnectedClients_.at(Request.InstanceId)->Socket;
+					sf::Packet Packet;
+					Packet << Request;
+					SendPacketHelper(Packet, Socket);
+				}
+				else
+				{
+					for (const auto& Client : ConnectedClients_)
+					{
+						sf::TcpSocket& Socket = Client->Socket;
+						sf::Packet Packet;
+						Packet << Request;
+						SendPacketHelper(Packet, Socket);
+					}
+				}
 			}
 		}
 	}
@@ -101,7 +152,7 @@ void NS::Networking::Server_ProcessRequests()
 		NetRequest ReplicationRequest;
 		ReplicationRequest.Reliability = EReliability::RELIABLE;
 		ReplicationRequest.RequestType = ERequestType::REPLICATION;
-		ReplicationRequest.InstanceId = 0; // TODO : Handle multiple clients
+		ReplicationRequest.InstanceId = -1;
 		ReplicationRequest.ActorId = ActorId;
 		ReplicationRequest.ObjectOffset = Prop.Offset;
 		ReplicationRequest.DataSize = Prop.Size;  
@@ -134,7 +185,7 @@ void NS::Networking::Server_ProcessRequests()
 	}
 }
 
-void NS::Networking::Server_RegisterNewActor(Actor* NewActor)
+void NS::Networking::Server_RegisterNewActor(Actor* NewActor, const NS::IdentifierType AuthNetId)
 {
 	// 1. add unique entry to registry
 	IdentifierType NewActorId = LastActorId++;
@@ -144,7 +195,7 @@ void NS::Networking::Server_RegisterNewActor(Actor* NewActor)
 	NetRequest ActorCreationRequest;
 	ActorCreationRequest.Reliability = EReliability::RELIABLE;
 	ActorCreationRequest.RequestType = ERequestType::ACTOR_CREATION;
-	ActorCreationRequest.InstanceId = 0;
+	ActorCreationRequest.InstanceId = static_cast<InstanceIdType>(AuthNetId);
 	ActorCreationRequest.ActorId = NewActorId;
 	ActorCreationRequest.ObjectOffset = 0;
 	

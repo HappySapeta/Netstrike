@@ -16,7 +16,8 @@ namespace NS
 		void Draw(sf::RenderWindow& Window);
 		void StartSubsystems();
 		void StopSubsystems();
-		
+		std::vector<NS::Actor*> GetActors() const;
+
 #pragma region DELETED METHODS
 		Engine(const Engine&) = delete;
 		Engine(Engine&&) = delete;
@@ -27,7 +28,7 @@ namespace NS
 	public:
 
 		template<class ActorType, class... ParameterTypes>
-		ActorType* CreateActor(ParameterTypes&&... Args)
+		ActorType* CreateActor(IdentifierType AuthNetId = -1, ParameterTypes&&... Args)
 		{
 			Actors_.emplace_back(std::make_unique<ActorType>(std::forward<ParameterTypes>(Args)...));
 			Actor* NewActor = Actors_.back().get();
@@ -41,7 +42,7 @@ namespace NS
 			if (Networking_)
 			{
 #ifdef NS_SERVER
-				Networking_->Server_RegisterNewActor(NewActor);
+				Networking_->Server_RegisterNewActor(NewActor, AuthNetId);
 #endif
 				Networking_->AddReplicateProps(ReplicatedProps);
 				Networking_->AddRPCProps(RpcProps);
@@ -51,6 +52,23 @@ namespace NS
 		}
 		Actor* CreateActor(const size_t TypeHash);
 		void DestroyActor(Actor* ActorToDestroy);
+		
+		template<class ActorType>
+		ActorType* GetOwnedActor()
+		{
+			for (const auto& Actor : Actors_)
+			{
+				if (Actor->GetNetId() == NS::Networking::Get()->Client_GetNetId())
+				{
+					if (ActorType* Ptr = dynamic_cast<ActorType*>(Actor.get()))
+					{
+						return Ptr;
+					}
+				}
+			}
+			
+			return nullptr;
+		}
 		
 	private:
 		

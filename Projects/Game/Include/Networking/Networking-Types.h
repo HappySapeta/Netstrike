@@ -21,7 +21,8 @@ namespace NS
 	{
 		REPLICATION,
 		RPC,
-		ACTOR_CREATION
+		ACTOR_CREATION,
+		ID_ASSIGNMENT
 	};
 
 	struct NetClient
@@ -68,4 +69,6 @@ namespace NS
 
 	void operator<<(sf::Packet& Packet, const NS::NetRequest& Request);
 	void operator>>(sf::Packet& Packet, NS::NetRequest & Request);
+	
+	typedef std::function<void(const NetClient*)> OnClientConnectedDelegate;
 }

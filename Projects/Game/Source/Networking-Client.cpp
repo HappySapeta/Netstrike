@@ -4,7 +4,6 @@
 #include "Engine/Engine.h"
 #include "Networking/Networking.h"
 
-// TODO: Use Non-blocking sockets if possible.
 void NS::Networking::Client_ConnectToServer(const sf::IpAddress& ServerAddress, const uint16_t ServerPort)
 {
 	TCPSocket_.disconnect();
@@ -80,6 +79,16 @@ void NS::Networking::Client_ProcessRequests()
 				Client_ProcessRequest_Replication(Packet);
 				break;
 			}
+			case ERequestType::RPC:
+			{
+				Client_ProcessRequest_RPC(Packet);
+				break;
+			}
+			case ERequestType::ID_ASSIGNMENT:
+			{
+				Client_ProcessRequest_IDAssignment(Packet);
+				break;
+			}
 		}
 	}
 }
@@ -122,8 +131,28 @@ void NS::Networking::Client_ProcessRequest_ActorCreate(const NetRequest& Request
 	size_t TypeHash;
 	memcpy_s(&TypeHash, sizeof(TypeHash), Request.Data, Request.DataSize);
 	
+	if (Request.InstanceId == NetId_)
+	{
+		NSLOG(ELogLevel::INFO, "Actor created for me! {}", Request.InstanceId);
+	}
+	
 	Actor* NewActor = Engine::Get()->CreateActor(TypeHash);
+	NewActor->SetNetId(NetId_);
 	ActorRegistry_[NewActor] = Request.ActorId;
+}
+
+void NS::Networking::Client_ProcessRequest_RPC(const NetRequest& Packet)
+{
+	RPCReceived RpcReceived;
+	RpcReceived.ActorId = Packet.ActorId;
+	memcpy_s(&RpcReceived.FunctionHash, sizeof(size_t), Packet.Data, Packet.DataSize);
+	ProcessRequest_RPCReceived(RpcReceived);
+}
+
+void NS::Networking::Client_ProcessRequest_IDAssignment(const NetRequest& Packet)
+{
+	NetId_ = Packet.InstanceId;
+	NSLOG(ELogLevel::INFO, "NetId assigned : {}", NetId_);
 }
 
 #endif

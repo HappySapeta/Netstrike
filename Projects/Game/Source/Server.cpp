@@ -22,19 +22,25 @@ sf::Vector2f GetRandomPosition()
 	return {static_cast<float>(DistributionX(Engine)), static_cast<float>(DistributionY(Engine))};
 }
 
+void OnClientConnected(const NS::NetClient* NewClient)
+{
+	NSLOG(NS::ELogLevel::INFO, "New client connected : {}", NewClient->ClientId);
+	NS::Tank* NewTank = NS::Engine::Get()->CreateActor<NS::Tank>(NewClient->ClientId);
+	
+	NewTank->SetPosition(GetRandomPosition());
+}
+
 int main()
 {
 	NS::Engine* Engine = NS::Engine::Get();
+	NS::Networking::Get()->Server_AssignOnClientConnected(&OnClientConnected);
 	Engine->StartSubsystems();
-	
-	NS::Tank* Tank = Engine->CreateActor<NS::Tank>();
 	
 	while (true)
 	{
 		static TimePoint TickStart;
 		TickStart = HRClock::now();
 		
-		Tank->SetPosition(GetRandomPosition());
 		Engine->Update(0.016f);
 
 		Duration TickDuration = HRClock::now() - TickStart;

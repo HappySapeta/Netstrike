@@ -11,6 +11,10 @@ void NS::Actor::Update(const float DeltaTime)
 	{
 		Component->Update(DeltaTime);
 	}
+// Uncomment to test Server to Client RPC.
+//#ifdef NS_SERVER
+//	NS::Networking::Get()->Server_CallRPC({this, "TestSomething"});
+//#endif
 }
 
 size_t NS::Actor::GetTypeInfo() const
@@ -25,10 +29,10 @@ NS::Actor* NS::Actor::CreateCopy()
 
 void NS::Actor::GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties)
 {
-	OutReplicatedProperties.push_back({this, offsetof(Actor, TestVariable), sizeof(TestVariable)});
+	// OutReplicatedProperties.push_back({this, offsetof(Actor, TestVariable), sizeof(TestVariable)});
 }
 
 void NS::Actor::GetRPCSignatures(std::vector<NS::RPCProp>& OutRpcProps)
 {
-	OutRpcProps.push_back({"TestSomething", std::bind(&NS::Actor::TestSomething, this)});
+	// OutRpcProps.push_back({"TestSomething", std::bind(&NS::Actor::TestSomething, std::placeholders::_1)});
 }
