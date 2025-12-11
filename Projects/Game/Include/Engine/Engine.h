@@ -53,6 +53,23 @@ namespace NS
 		Actor* CreateActor(const size_t TypeHash);
 		void DestroyActor(Actor* ActorToDestroy);
 		
+		template<class ActorType>
+		ActorType* GetOwnedActor()
+		{
+			for (const auto& Actor : Actors_)
+			{
+				if (Actor->GetNetId() == NS::Networking::Get()->Client_GetNetId())
+				{
+					if (ActorType* Ptr = dynamic_cast<ActorType*>(Actor.get()))
+					{
+						return Ptr;
+					}
+				}
+			}
+			
+			return nullptr;
+		}
+		
 	private:
 		
 		Engine();

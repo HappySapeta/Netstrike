@@ -49,17 +49,7 @@ int main()
 		}
 		else
 		{
-			const std::vector<NS::Actor*>& Actors = Engine->GetActors();
-			for (NS::Actor* Actor : Actors)
-			{
-				if (Actor->GetNetId() == NS::Networking::Get()->Client_GetNetId())
-				{
-					if (NS::Tank* Ptr = dynamic_cast<NS::Tank*>(Actor))
-					{
-						PlayerTank = Ptr;
-					}
-				}
-			}
+			PlayerTank = NS::Engine::Get()->GetOwnedActor<NS::Tank>();
 		}
 		
 		Engine->Update(0.016f);
