@@ -110,6 +110,8 @@ void NS::Networking::Server_SendPackets()
 					Packet << Request;
 					if (SendPacketHelper(Packet, Socket) == sf::Socket::Status::Disconnected)
 					{
+						std::lock_guard<std::mutex> QueueLock(QueueMutex_);
+						Server_Selector_.remove((*It)->Socket);
 						It = ConnectedClients_.erase(It);
 					}
 					else
@@ -126,6 +128,7 @@ void NS::Networking::Server_ReceivePackets()
 {
 	if (Server_Selector_.wait(sf::milliseconds(NS::SERVER_SELECTOR_WAIT_TIME_MS)))
 	{
+		std::lock_guard<std::mutex> QueueLock(QueueMutex_);
 		for (auto& SocketPtr : ConnectedClients_)
 		{
 			if (!Server_Selector_.isReady(SocketPtr->Socket))
@@ -144,7 +147,6 @@ void NS::Networking::Server_ReceivePackets()
 				NS::NetRequest Request;
 				Packet >> Request;
 				{
-					std::lock_guard<std::mutex> QueueLock(QueueMutex_);
 					IncomingPackets_.emplace_back(Request);
 				}
 			}

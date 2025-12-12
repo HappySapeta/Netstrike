@@ -5,14 +5,17 @@
 #include "Tank.h"
 #include "Engine/Engine.h"
 #include "Input.h"
+#include "World.h"
 
 int main()
 {
 	NS::Tank* PlayerTank = nullptr;
 	NS::Engine* Engine = NS::Engine::Get();
 	
+	Engine->CreateActor<NS::World>();
 	sf::RenderWindow Window(sf::VideoMode({NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT}), "!! N E T S T R I K E !!");
 	sf::View View({NS::SCREEN_WIDTH / 2, NS::SCREEN_HEIGHT / 2}, {NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT});
+	
 	
 	Engine->StartSubsystems();
 	

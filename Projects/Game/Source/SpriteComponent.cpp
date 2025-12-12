@@ -20,6 +20,7 @@ void NS::SpriteComponent::SetTexture(const std::string& TextureResource)
 	if (!Texture_)
 	{
 		Texture_ = std::make_unique<sf::Texture>(Path);
+		Texture_->setRepeated(true);
 	}
 	else
 	{
@@ -38,4 +39,9 @@ void NS::SpriteComponent::SetTexture(const std::string& TextureResource)
 	{
 		Sprite_->setTexture(*Texture_);
 	}
+}
+
+void NS::SpriteComponent::SetTextRect(const sf::IntRect& Rect)
+{
+	Sprite_->setTextureRect(Rect);
 }
