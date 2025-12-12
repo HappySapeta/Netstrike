@@ -16,7 +16,7 @@ int main()
 	
 	Engine->StartSubsystems();
 	
-	while (Window.isOpen())
+	while (Window.isOpen() && NS::Networking::Get()->IsConnectedToServer())
 	{
 		const std::optional<sf::Event> Event = Window.pollEvent();
 		if (Event && Window.hasFocus())
@@ -61,6 +61,12 @@ int main()
 	
 	Engine->StopSubsystems();
 	
-	std::cin.get();
+	if (Window.isOpen())
+	{
+		Window.close();
+	}
+	
+	std::cin.get(); // prevents the server console from shutting down.
+	
 	return 0;
 }

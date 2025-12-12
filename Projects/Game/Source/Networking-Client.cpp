@@ -19,10 +19,16 @@ void NS::Networking::Client_ConnectToServer(const sf::IpAddress& ServerAddress, 
 
 	TCPSocket_.setBlocking(false);
 	Client_Selector_.add(TCPSocket_);
+	bIsConnectedToServer = true;
 }
 
 void NS::Networking::Client_SendPackets()
 {
+	if (!bIsConnectedToServer)
+	{
+		return;
+	}
+	
 	while (!OutgoingPackets_.empty())
 	{
 		NS::NetRequest Request = OutgoingPackets_.front();
@@ -33,7 +39,11 @@ void NS::Networking::Client_SendPackets()
 		
 		if (Request.Reliability == EReliability::RELIABLE)
 		{
-			SendPacketHelper(Packet, TCPSocket_);
+			if (SendPacketHelper(Packet, TCPSocket_) == sf::Socket::Status::Disconnected)
+			{
+				bIsConnectedToServer = false;
+				NSLOG(ELogLevel::WARNING, "Server has disconnected!");
+			}
 		}
 	}
 }
