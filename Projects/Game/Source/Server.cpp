@@ -33,10 +33,11 @@ void OnClientConnected(const NS::NetClient* NewClient)
 int main()
 {
 	NS::Engine* Engine = NS::Engine::Get();
+	NS::Networking* Networking = NS::Networking::Get();
 	NS::Networking::Get()->Server_AssignOnClientConnected(&OnClientConnected);
 	Engine->StartSubsystems();
 	
-	while (true)
+	while (Networking->Server_HasConnections())
 	{
 		static TimePoint TickStart;
 		TickStart = HRClock::now();
@@ -54,6 +55,11 @@ int main()
 		}
 	}
 	
+	NSLOG(NS::ELogLevel::INFO, "All clients have disconnected. Nothing to serve.");
+	
 	Engine->StopSubsystems();
+	
+	std::cin.get(); // prevents the server console from shutting down.
+	
 	return 0;
 }  

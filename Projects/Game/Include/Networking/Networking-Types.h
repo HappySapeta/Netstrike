@@ -70,5 +70,6 @@ namespace NS
 	void operator<<(sf::Packet& Packet, const NS::NetRequest& Request);
 	void operator>>(sf::Packet& Packet, NS::NetRequest & Request);
 	
+	typedef std::vector<std::unique_ptr<NetClient>> ClientVectorType;
 	typedef std::function<void(const NetClient*)> OnClientConnectedDelegate;
 }

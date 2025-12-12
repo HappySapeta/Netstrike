@@ -54,7 +54,10 @@ void NS::Networking::Client_ReceivePackets()
 			{
 				NS::NetRequest Request;
 				Packet >> Request;
-				IncomingPackets_.emplace_back(Request);
+				{
+					std::lock_guard<std::mutex> QueueLock(QueueMutex_);
+					IncomingPackets_.emplace_back(Request);
+				}
 			}
 		}
 	}
@@ -62,31 +65,32 @@ void NS::Networking::Client_ReceivePackets()
 
 void NS::Networking::Client_ProcessRequests()
 {
+	std::lock_guard<std::mutex> QueueLock(QueueMutex_);
 	while (!IncomingPackets_.empty())
 	{
-		NetRequest Packet = IncomingPackets_.front();
+		NetRequest Request = IncomingPackets_.front();
 		IncomingPackets_.pop_front();
 
-		switch (Packet.RequestType)
+		switch (Request.RequestType)
 		{
 			case ERequestType::ACTOR_CREATION:
 			{
-				Client_ProcessRequest_ActorCreate(Packet);
+				Client_ProcessRequest_ActorCreate(Request);
 				break;
 			}
 			case ERequestType::REPLICATION:
 			{
-				Client_ProcessRequest_Replication(Packet);
+				Client_ProcessRequest_Replication(Request);
 				break;
 			}
 			case ERequestType::RPC:
 			{
-				Client_ProcessRequest_RPC(Packet);
+				Client_ProcessRequest_RPC(Request);
 				break;
 			}
 			case ERequestType::ID_ASSIGNMENT:
 			{
-				Client_ProcessRequest_IDAssignment(Packet);
+				Client_ProcessRequest_IDAssignment(Request);
 				break;
 			}
 		}

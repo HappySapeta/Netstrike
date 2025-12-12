@@ -3,6 +3,7 @@
 #include <memory>
 #include <thread>
 #include <functional>
+#include <mutex>
 #include <unordered_map>
 
 #include "Networking-Types.h"
@@ -41,6 +42,10 @@ namespace NS
 		void Client_ConnectToServer(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
 #endif
 #ifdef NS_SERVER // All public server-only functions go here.
+		bool Server_HasConnections()
+		{
+			return !ConnectedClients_.empty();
+		}
 		void Server_AssignOnClientConnected(OnClientConnectedDelegate Callback);
 		void Server_CallRPC(const RPCSent& RpcRequest, const Actor* Player = nullptr);
 		void Server_Listen();
@@ -73,7 +78,7 @@ namespace NS
 
 #ifdef NS_SERVER
 		sf::TcpListener ListenerSocket_;
-		std::vector<std::unique_ptr<NetClient>> ConnectedClients_;
+		ClientVectorType ConnectedClients_;
 		sf::SocketSelector Server_Selector_;
 		IdentifierType LastActorId = 0;
 		OnClientConnectedDelegate OnClientConnected;
@@ -90,12 +95,14 @@ namespace NS
 		std::deque<NetRequest> IncomingPackets_;
 		std::deque<NetRequest> OutgoingPackets_;
 		
-		std::thread NetworkUpdateThread_;
+		std::jthread NetworkUpdateThread_;
 		bool StopRequested = false;
 		bool hasStarted = false;
 		
 		std::vector<ReplicatedProp> ReplicatedProps_;
 		std::unordered_map<Actor*, IdentifierType> ActorRegistry_;
 		std::unordered_map<size_t, std::function<void(Actor*)>> FunctionRegistry_;
+		
+		std::mutex QueueMutex_;
 	};
 }
