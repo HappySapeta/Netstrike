@@ -5,16 +5,15 @@ namespace NS
 {
 	class Tank : public NS::Actor
 	{
+		friend class NS::Engine;
+	
 	public:
 		
 		Tank();
 		
 		[[nodiscard]] virtual Actor* CreateCopy() override;
 		virtual size_t GetTypeInfo() const override;
-		void MoveForward();
-		void MoveBackward();
-		void TurnRight();
-		void TurnLeft();
+		void InitInput();
 
 	protected:
 		
@@ -32,10 +31,6 @@ namespace NS
 	protected:
 		
 		sf::Vector2f Heading_;
-		
-	private:
-		
 		class SpriteComponent* SpriteComp_ = nullptr;
-		static std::unique_ptr<Actor> StaticInstance_;
 	};
 }

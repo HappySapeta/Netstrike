@@ -1,4 +1,9 @@
 ﻿#include "Tank.h"
+
+#ifdef NS_CLIENT
+#include "Input.h"
+#endif
+
 #include "Actor/SpriteComponent.h"
 
 constexpr float MOVEMENT_SPEED = 2.0f;
@@ -21,37 +26,48 @@ NS::Actor* NS::Tank::CreateCopy()
 	return new Tank();
 }
 
+void NS::Tank::InitInput()
+{
+#ifdef NS_CLIENT
+	NS::Input* Input = NS::Input::Get();
+	auto MoveTankVertical = [this](const float Value) -> void
+	{
+		if (Value > 0)
+		{
+			NS::Networking::Get()->Client_CallRPC({this, "Server_MoveTankForward"});
+		}
+		else if (Value < 0)
+		{
+			NS::Networking::Get()->Client_CallRPC({this, "Server_MoveTankBackward"});
+		}
+	};
+	Input->BindAxisVertical(MoveTankVertical);
+	
+	auto TurnTank = [this](const float Value)
+	{
+		if (Value > 0)
+		{
+			NS::Networking::Get()->Client_CallRPC({this, "Server_TurnRight"});
+		}
+		else if (Value < 0)
+		{
+			NS::Networking::Get()->Client_CallRPC({this, "Server_TurnLeft"});
+		}	
+	};
+	Input->BindAxisHorizontal(TurnTank);
+#endif
+}
+
+void NS::Tank::Update(const float DeltaTime)
+{
+	Actor::Update(DeltaTime);
+	SpriteComp_->SetRotation(Heading_.angle());
+	SpriteComp_->SetPosition(Position_);
+}
+
 size_t NS::Tank::GetTypeInfo() const
 {
 	return typeid(this).hash_code();
-}
-
-void NS::Tank::MoveForward()
-{
-#ifdef NS_CLIENT
-	NS::Networking::Get()->Client_CallRPC({this, "Server_MoveTankForward"});
-#endif
-}
-
-void NS::Tank::MoveBackward()
-{
-#ifdef NS_CLIENT
-	NS::Networking::Get()->Client_CallRPC({this, "Server_MoveTankBackward"});
-#endif
-}
-
-void NS::Tank::TurnRight()
-{
-#ifdef NS_CLIENT
-	NS::Networking::Get()->Client_CallRPC({this, "Server_TurnRight"});
-#endif
-}
-
-void NS::Tank::TurnLeft()
-{
-#ifdef NS_CLIENT
-	NS::Networking::Get()->Client_CallRPC({this, "Server_TurnLeft"});
-#endif
 }
 
 void NS::Tank::Server_MoveTankForward()
@@ -113,11 +129,4 @@ void NS::Tank::GetRPCSignatures(std::vector<NS::RPCProp>& OutRpcProps)
 			TankPtr->Server_TurnRight();
 		}
 	}});
-}
-
-void NS::Tank::Update(const float DeltaTime)
-{
-	Actor::Update(DeltaTime);
-	SpriteComp_->SetRotation(Heading_.angle());
-	SpriteComp_->SetPosition(Position_);
 }

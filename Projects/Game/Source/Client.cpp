@@ -6,48 +6,14 @@
 #include "Engine/Engine.h"
 #include "Input.h"
 
-NS::Tank* PlayerTank = nullptr;
-
-void MoveTankVertical(const float Input)
-{
-	if (PlayerTank)
-	{
-		if (Input > 0)
-		{
-			PlayerTank->MoveForward();
-		}
-		else if (Input < 0)
-		{
-			PlayerTank->MoveBackward();
-		}
-	}
-}
-
-void TurnTank(const float Input)
-{
-	if (PlayerTank)
-	{
-		if (Input > 0)
-		{
-			PlayerTank->TurnRight();
-		}
-		else if (Input < 0)
-		{
-			PlayerTank->TurnLeft();
-		}
-	}
-}
 
 int main()
 {
+	NS::Tank* PlayerTank = nullptr;
 	NS::Engine* Engine = NS::Engine::Get();
 	sf::RenderWindow Window(sf::VideoMode({NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT}), "!! N E T S T R I K E !!");
 	
 	Engine->StartSubsystems();
-	
-	NS::Input* Input = NS::Input::Get();
-	Input->BindAxisVertical(&MoveTankVertical);
-	Input->BindAxisHorizontal(&TurnTank);
 	
 	while (Window.isOpen())
 	{
@@ -65,6 +31,10 @@ int main()
 		if (!PlayerTank)
 		{
 			PlayerTank = NS::Engine::Get()->GetOwnedActor<NS::Tank>();
+		}
+		else
+		{
+			PlayerTank->InitInput();
 		}
 		
 		Engine->Update(0.016f);

@@ -3,7 +3,15 @@
 #include "Logger.h"
 #include "Actor/ActorComponent.h"
 
-std::unique_ptr<NS::Actor> NS::Actor::StaticInstance_(nullptr);
+void NS::Actor::SetPosition(const sf::Vector2f& NewPosition)
+{
+	Position_ = NewPosition;			
+}
+
+sf::Vector2f NS::Actor::GetPosition() const
+{
+	return Position_;
+}
 
 void NS::Actor::Update(const float DeltaTime)
 {
@@ -11,10 +19,6 @@ void NS::Actor::Update(const float DeltaTime)
 	{
 		Component->Update(DeltaTime);
 	}
-// Uncomment to test Server to Client RPC.
-//#ifdef NS_SERVER
-//	NS::Networking::Get()->Server_CallRPC({this, "TestSomething"});
-//#endif
 }
 
 size_t NS::Actor::GetTypeInfo() const
@@ -25,14 +29,4 @@ size_t NS::Actor::GetTypeInfo() const
 NS::Actor* NS::Actor::CreateCopy()
 {
 	return new Actor();
-}
-
-void NS::Actor::GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties)
-{
-	// OutReplicatedProperties.push_back({this, offsetof(Actor, TestVariable), sizeof(TestVariable)});
-}
-
-void NS::Actor::GetRPCSignatures(std::vector<NS::RPCProp>& OutRpcProps)
-{
-	// OutRpcProps.push_back({"TestSomething", std::bind(&NS::Actor::TestSomething, std::placeholders::_1)});
 }
