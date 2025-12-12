@@ -64,6 +64,10 @@ void NS::Tank::Update(const float DeltaTime)
 	Actor::Update(DeltaTime);
 	SpriteComp_->SetRotation(Heading_.angle());
 	SpriteComp_->SetPosition(Position_);
+	
+#ifdef NS_CLIENT
+	NS::Networking::Get()->Client_CallRPC({this, "Server_TurnRight"});
+#endif
 }
 
 size_t NS::Tank::GetTypeInfo() const

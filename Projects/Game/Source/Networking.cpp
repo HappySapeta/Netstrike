@@ -59,7 +59,7 @@ void NS::Networking::Start()
 {
 	NSLOG(ELogLevel::INFO, "Starting network update thread.");
 	hasStarted = true;
-	NetworkUpdateThread_ = std::thread(std::bind(&NS::Networking::UpdateThread, this));
+	NetworkUpdateThread_ = std::jthread(&NS::Networking::UpdateThread, this);
 }
 
 void NS::Networking::Stop()
@@ -91,6 +91,20 @@ void NS::Networking::Update()
 #endif
 }
 
+void NS::Networking::UpdateThread()
+{
+	while (!StopRequested)
+	{
+		// Populate the queue with incoming requests
+#ifdef NS_CLIENT
+		Client_ReceivePackets();
+#endif
+#ifdef NS_SERVER
+		Server_ReceivePackets();
+#endif
+	}
+}
+
 void NS::Networking::AddReplicateProps(const std::vector<ReplicatedProp>& Props)
 {
 	for (const ReplicatedProp& Prop : Props)
@@ -109,20 +123,6 @@ void NS::Networking::AddRPCProps(const std::vector<RPCProp>& RpcProps)
 	{
 		const size_t Hash = Hasher(Prop.FunctionName);
 		 FunctionRegistry_[Hash] = Prop.Callback;
-	}
-}
-
-void NS::Networking::UpdateThread()
-{
-	while (!StopRequested)
-	{
-		// Populate the queue with incoming requests
-#ifdef NS_CLIENT
-		Client_ReceivePackets();
-#endif
-#ifdef NS_SERVER
-		Server_ReceivePackets();
-#endif
 	}
 }
 
@@ -148,6 +148,10 @@ sf::Socket::Status NS::Networking::SendPacketHelper(sf::Packet& Packet, sf::TcpS
 	if (SendStatus == sf::Socket::Status::Error)
 	{
 		NSLOG(ELogLevel::ERROR, "Failed to send packet. {}:{}", Socket.getRemoteAddress()->toString(), Socket.getRemotePort());
+	}
+	else if (SendStatus == sf::Socket::Status::Disconnected)
+	{
+		NSLOG(ELogLevel::WARNING, "Remote host disconnected. {}:{}", Socket.getRemoteAddress()->toString(), Socket.getRemotePort());
 	}
 	
 	return SendStatus;

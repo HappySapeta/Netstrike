@@ -87,24 +87,34 @@ void NS::Networking::Server_SendPackets()
 	{
 		NetRequest Request = OutgoingPackets_.front();
 		OutgoingPackets_.pop_front();
+		if (Request.Reliability == EReliability::RELIABLE)
 		{
-			if (Request.Reliability == EReliability::RELIABLE)
+			if (Request.InstanceId != -1 && Request.RequestType != ERequestType::ACTOR_CREATION)
 			{
-				if (Request.InstanceId != -1 && Request.RequestType != ERequestType::ACTOR_CREATION)
+				const int ClientIndex = Request.InstanceId;
+				sf::TcpSocket& Socket = ConnectedClients_.at(ClientIndex)->Socket;
+				sf::Packet Packet;
+				Packet << Request;
+				if (SendPacketHelper(Packet, Socket) == sf::Socket::Status::Disconnected)
 				{
-					sf::TcpSocket& Socket = ConnectedClients_.at(Request.InstanceId)->Socket;
+					ConnectedClients_.erase(ConnectedClients_.begin() + ClientIndex);
+				}
+			}
+			else
+			{
+				ClientVectorType::const_iterator It = ConnectedClients_.begin();
+				while (It != ConnectedClients_.end())
+				{
+					sf::TcpSocket& Socket = (*It)->Socket;
 					sf::Packet Packet;
 					Packet << Request;
-					SendPacketHelper(Packet, Socket);
-				}
-				else
-				{
-					for (const auto& Client : ConnectedClients_)
+					if (SendPacketHelper(Packet, Socket) == sf::Socket::Status::Disconnected)
 					{
-						sf::TcpSocket& Socket = Client->Socket;
-						sf::Packet Packet;
-						Packet << Request;
-						SendPacketHelper(Packet, Socket);
+						It = ConnectedClients_.erase(It);
+					}
+					else
+					{
+						++It;
 					}
 				}
 			}
@@ -133,7 +143,10 @@ void NS::Networking::Server_ReceivePackets()
 			{
 				NS::NetRequest Request;
 				Packet >> Request;
-				IncomingPackets_.emplace_back(Request);
+				{
+					std::lock_guard<std::mutex> QueueLock(QueueMutex_);
+					IncomingPackets_.emplace_back(Request);
+				}
 			}
 		}
 	}
@@ -163,18 +176,19 @@ void NS::Networking::Server_ProcessRequests()
 		PushRequest(ReplicationRequest);
 	}
 	
+	std::lock_guard<std::mutex> QueueLock(QueueMutex_);
 	while (!IncomingPackets_.empty())
 	{
-		NetRequest Packet = IncomingPackets_.front();
+		NetRequest Request = IncomingPackets_.front();
 		IncomingPackets_.pop_front();
 
-		switch (Packet.RequestType)
+		switch (Request.RequestType)
 		{
 			case ERequestType::RPC:
 			{
 				RPCReceived RpcReceived;
-				RpcReceived.ActorId = Packet.ActorId;
-				memcpy_s(&RpcReceived.FunctionHash, sizeof(size_t), Packet.Data, Packet.DataSize);
+				RpcReceived.ActorId = Request.ActorId;
+				memcpy_s(&RpcReceived.FunctionHash, sizeof(size_t), Request.Data, Request.DataSize);
 				ProcessRequest_RPCReceived(RpcReceived);
 				break;
 			}
