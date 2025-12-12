@@ -14,6 +14,10 @@ namespace NS
 		[[nodiscard]] virtual Actor* CreateCopy() override;
 		virtual size_t GetTypeInfo() const override;
 		void InitInput();
+		bool GetIsPlayerInputIntialized() const
+		{
+			return playerInputInitialized;
+		}
 
 	protected:
 		
@@ -32,5 +36,9 @@ namespace NS
 		
 		sf::Vector2f Heading_;
 		class SpriteComponent* SpriteComp_ = nullptr;
+		
+	private:
+		
+		bool playerInputInitialized = false;
 	};
 }

@@ -6,8 +6,8 @@
 
 #include "Actor/SpriteComponent.h"
 
-constexpr float MOVEMENT_SPEED = 2.0f;
-constexpr float TURN_RATE = 2.0f;
+constexpr float MOVEMENT_SPEED = 0.05f;
+constexpr float TURN_RATE = 0.02f;
 const char* TANK_TEXTURE = "Textures\\Tank.png";
 
 NS::Tank::Tank()
@@ -28,6 +28,7 @@ NS::Actor* NS::Tank::CreateCopy()
 
 void NS::Tank::InitInput()
 {
+	playerInputInitialized = true;
 #ifdef NS_CLIENT
 	NS::Input* Input = NS::Input::Get();
 	auto MoveTankVertical = [this](const float Value) -> void

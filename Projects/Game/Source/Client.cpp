@@ -6,12 +6,13 @@
 #include "Engine/Engine.h"
 #include "Input.h"
 
-
 int main()
 {
 	NS::Tank* PlayerTank = nullptr;
 	NS::Engine* Engine = NS::Engine::Get();
+	
 	sf::RenderWindow Window(sf::VideoMode({NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT}), "!! N E T S T R I K E !!");
+	sf::View View({NS::SCREEN_WIDTH / 2, NS::SCREEN_HEIGHT / 2}, {NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT});
 	
 	Engine->StartSubsystems();
 	
@@ -25,7 +26,12 @@ int main()
 				Window.close();
 			}
 			
-			NS::Input::Get()->Update(Event);
+			NS::Input::Get()->UpdateEvents(Event);
+		}
+		
+		if (Window.hasFocus())
+		{
+			NS::Input::Get()->UpdateAxes();
 		}
 		
 		if (!PlayerTank)
@@ -34,13 +40,19 @@ int main()
 		}
 		else
 		{
-			PlayerTank->InitInput();
+			if (!PlayerTank->GetIsPlayerInputIntialized())
+			{
+				PlayerTank->InitInput();
+			}
+			
+			View.setCenter(PlayerTank->GetPosition());
 		}
 		
 		Engine->Update(0.016f);
 		
 		// DRAW
 		{
+			Window.setView(View);
 			Window.clear();
 			Engine->Draw(Window);
 			Window.display();
