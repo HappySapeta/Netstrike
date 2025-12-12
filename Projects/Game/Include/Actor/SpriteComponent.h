@@ -17,9 +17,22 @@ namespace NS
 		virtual void Update(const float DeltaTime) override {};
 		void Draw(sf::RenderWindow& RenderWindow);
 		void SetTexture(const std::string& TextureResource);
+		
+		void SetRotation(const sf::Angle& Angle)
+		{
+			Rotation_ = Angle;
+		}
+		
+		void SetPosition(const sf::Vector2f& NewPosition)
+		{
+			Position_ = NewPosition;
+		}
 
 	private:
 		std::unique_ptr<sf::Sprite> Sprite_;
 		std::unique_ptr<sf::Texture> Texture_;
+		
+		sf::Angle Rotation_;
+		sf::Vector2f Position_;
 	};
 }

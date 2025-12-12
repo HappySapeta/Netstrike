@@ -19,20 +19,9 @@ namespace NS
 
 	public:
 		
-		void SetPosition(const sf::Vector2f& NewPosition)
-		{
-			Position_ = NewPosition;			
-		}
-		
-		sf::Vector2f GetPosition() const
-		{
-			return Position_;
-		}
-		
-		void TestSomething()
-		{
-			NSLOG(ELogLevel::INFO, "TestSomething RPC invoked! {}", reinterpret_cast<uint64_t>(this));
-		}
+		void SetPosition(const sf::Vector2f& NewPosition);
+		sf::Vector2f GetPosition() const;
+		virtual void Update(const float DeltaTime);
 		
 	public:
 
@@ -40,7 +29,6 @@ namespace NS
 		ComponentType* AddComponent()
 		{
 			Components_.push_back(std::make_unique<ComponentType>());
-			Components_.back()->Attach(this);
 			return static_cast<ComponentType*>(Components_.back().get());
 		}
 
@@ -75,18 +63,13 @@ namespace NS
 
 	private:
 		
-		virtual void GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties);
-		virtual void GetRPCSignatures(std::vector<NS::RPCProp>& OutRpcProps);
-		virtual void Update(const float DeltaTime);
+		virtual void GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties) {};
+		virtual void GetRPCSignatures(std::vector<NS::RPCProp>& OutRpcProps) {};
 
 	protected:
 
 		sf::Vector2f Position_ = {0.0f, 0.0f};
 		std::vector<std::unique_ptr<ActorComponent>> Components_;
-		
-	private:
-		
-		static std::unique_ptr<Actor> StaticInstance_;
 		IdentifierType NetId_ = -1;
 	};
 }

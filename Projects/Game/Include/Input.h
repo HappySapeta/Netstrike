@@ -13,7 +13,8 @@ namespace NS
 	public:
 
 		static Input* Get();
-		void Update(const std::optional<sf::Event>& event);
+		void UpdateEvents(const std::optional<sf::Event>& event);
+		void UpdateAxes();
 
 		Input(const Input&) = delete;
 		Input(Input&&) = delete;

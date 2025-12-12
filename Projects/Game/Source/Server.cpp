@@ -16,8 +16,8 @@ sf::Vector2f GetRandomPosition()
 {
 	std::random_device Device;
 	std::mt19937 Engine(Device());
-	std::uniform_int_distribution<int> DistributionX(0, NS::SCREEN_WIDTH);
-	std::uniform_int_distribution<int> DistributionY(0, NS::SCREEN_HEIGHT);
+	std::uniform_int_distribution<int> DistributionX(0, NS::WORLD_SIZE);
+	std::uniform_int_distribution<int> DistributionY(0, NS::WORLD_SIZE);
 	
 	return {static_cast<float>(DistributionX(Engine)), static_cast<float>(DistributionY(Engine))};
 }

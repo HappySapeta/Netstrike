@@ -17,10 +17,14 @@ NS::Input* NS::Input::Get()
 	return Instance_.get();
 }
 
-void NS::Input::Update(const std::optional<sf::Event>& Event)
+void NS::Input::UpdateEvents(const std::optional<sf::Event>& Event)
+{
+	HandleEvent(Event);
+}
+
+void NS::Input::UpdateAxes()
 {
 	HandleAxes();
-	HandleEvent(Event);
 }
 
 void NS::Input::BindOnKeyPressed(sf::Keyboard::Scancode Key, const InputActionBinding& Callback)
@@ -94,8 +98,7 @@ void NS::Input::HandleAxes()
 	{
 		HorizontalValue += 1.0f;
 	}
-	
-	if (sf::Keyboard::isKeyPressed(NS::NegativeHorizontal))
+	else if (sf::Keyboard::isKeyPressed(NS::NegativeHorizontal))
 	{
 		HorizontalValue -= 1.0f;
 	}
@@ -105,8 +108,7 @@ void NS::Input::HandleAxes()
 	{
 		VerticalValue += 1.0f;
 	}
-	
-	if (sf::Keyboard::isKeyPressed(NS::NegativeVertical))
+	else if (sf::Keyboard::isKeyPressed(NS::NegativeVertical))
 	{
 		VerticalValue -= 1.0f;
 	}

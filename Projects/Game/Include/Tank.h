@@ -5,24 +5,40 @@ namespace NS
 {
 	class Tank : public NS::Actor
 	{
+		friend class NS::Engine;
+	
 	public:
 		
 		Tank();
 		
 		[[nodiscard]] virtual Actor* CreateCopy() override;
 		virtual size_t GetTypeInfo() const override;
-		void RPC_MoveRandom();
-		
+		void InitInput();
+		bool GetIsPlayerInputIntialized() const
+		{
+			return playerInputInitialized;
+		}
+
 	protected:
 		
-		void MoveTank();
+		void Server_MoveTankForward();
+		void Server_MoveTankBackward();
+		void Server_TurnLeft();
+		void Server_TurnRight();
 
 	private:
 
 		void GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties) override;
 		void GetRPCSignatures(std::vector<NS::RPCProp>& OutRpcProps) override;
+		void Update(const float DeltaTime) override;
 
+	protected:
+		
+		sf::Vector2f Heading_;
 		class SpriteComponent* SpriteComp_ = nullptr;
-		static std::unique_ptr<Actor> StaticInstance_;
+		
+	private:
+		
+		bool playerInputInitialized = false;
 	};
 }

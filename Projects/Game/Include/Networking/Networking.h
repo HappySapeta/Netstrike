@@ -16,10 +16,12 @@ namespace NS
 		[[nodiscard]] static Networking* Get();
 		void Start();
 		void Stop();
-		
+		void Update();
+
 		void AddReplicateProps(const std::vector<ReplicatedProp>& Props);
 		void AddRPCProps(const std::vector<RPCProp>& RpcProps);
 		void PushRequest(const NetRequest& NewRequest);
+		bool HasStarted();
 
 #pragma region DELETED METHODS
 		Networking(const Networking&) = delete;
@@ -90,6 +92,7 @@ namespace NS
 		
 		std::thread NetworkUpdateThread_;
 		bool StopRequested = false;
+		bool hasStarted = false;
 		
 		std::vector<ReplicatedProp> ReplicatedProps_;
 		std::unordered_map<Actor*, IdentifierType> ActorRegistry_;
