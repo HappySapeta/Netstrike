@@ -3,7 +3,6 @@
 #include "Networking/Networking.h"
 #include "Logger.h"
 #include "Actor/Actor.h"
-#include "Engine/Engine.h"
 
 std::unique_ptr<NS::Networking> NS::Networking::Instance_(nullptr);
 
@@ -51,14 +50,21 @@ void NS::Networking::PushRequest(const NetRequest& NewRequest)
 	OutgoingPackets_.push_back(NewRequest);
 }
 
+bool NS::Networking::HasStarted()
+{
+	return hasStarted;
+}
+
 void NS::Networking::Start()
 {
 	NSLOG(ELogLevel::INFO, "Starting network update thread.");
+	hasStarted = true;
 	NetworkUpdateThread_ = std::thread(std::bind(&NS::Networking::UpdateThread, this));
 }
 
 void NS::Networking::Stop()
 {
+	hasStarted = false;
 	StopRequested = true;
 	if (NetworkUpdateThread_.joinable())
 	{
@@ -69,6 +75,20 @@ void NS::Networking::Stop()
 	{
 		NSLOG(ELogLevel::INFO, "Failed to join network update thread.");
 	}
+}
+
+void NS::Networking::Update()
+{
+	// Populate the queue with incoming requests
+#ifdef NS_CLIENT
+	Client_SendPackets();
+	Client_ProcessRequests();
+#endif
+
+#ifdef NS_SERVER
+	Server_SendPackets();
+	Server_ProcessRequests();
+#endif
 }
 
 void NS::Networking::AddReplicateProps(const std::vector<ReplicatedProp>& Props)
@@ -98,15 +118,10 @@ void NS::Networking::UpdateThread()
 	{
 		// Populate the queue with incoming requests
 #ifdef NS_CLIENT
-		Client_SendPackets();
 		Client_ReceivePackets();
-		Client_ProcessRequests();
 #endif
-
 #ifdef NS_SERVER
-		Server_SendPackets();
 		Server_ReceivePackets();
-		Server_ProcessRequests();
 #endif
 	}
 }

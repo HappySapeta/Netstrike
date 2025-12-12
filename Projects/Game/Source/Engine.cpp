@@ -32,6 +32,11 @@ void NS::Engine::Update(const float DeltaTime)
 	{
 		Actor->Update(DeltaTime);
 	}
+	
+	if (Networking_->HasStarted())
+	{
+		Networking_->Update();
+	}
 }
 
 void NS::Engine::Draw(sf::RenderWindow& Window)
