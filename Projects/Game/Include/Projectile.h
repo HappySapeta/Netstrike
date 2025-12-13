@@ -9,6 +9,7 @@ namespace NS
 	public:
 
 		Projectile();
+		~Projectile();
 		
 		size_t GetTypeInfo() const override;
 		[[nodiscard]] Actor* CreateCopy() override;
@@ -23,5 +24,6 @@ namespace NS
 		
 		sf::Vector2f Velocity_; // REPLICATED
 		NS::SpriteComponent* SpriteComponent_ = nullptr;
+		float TimeAlive_;
 	};
 }

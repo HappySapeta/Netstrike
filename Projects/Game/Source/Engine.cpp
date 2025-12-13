@@ -32,6 +32,10 @@ void NS::Engine::Update(const float DeltaTime)
 {
 	for (auto& Actor : Actors_)
 	{
+		if (!Actor)
+		{
+			continue;
+		}
 		Actor->Update(DeltaTime);
 	}
 	
@@ -100,9 +104,6 @@ NS::Actor* NS::Engine::CreateActor(const size_t TypeHash)
 			
 	if (Networking_)
 	{
-#ifdef NS_SERVER
-		// Networking_->Server_RegisterNewActor(NewActor);
-#endif
 		Networking_->AddReplicateProps(ReplicatedProps);
 		Networking_->AddRPCProps(RpcProps);
 	}
@@ -112,11 +113,13 @@ NS::Actor* NS::Engine::CreateActor(const size_t TypeHash)
 
 void NS::Engine::DestroyActor(Actor* ActorToDestroy)
 {
+#ifdef NS_SERVER
+	Networking_->Server_DeRegisterActor(ActorToDestroy);
+#endif
 	std::vector<std::unique_ptr<Actor>>::iterator Iterator = Actors_.begin();
 	while (Iterator != Actors_.end())
 	{
-		Actor* Ptr = Iterator->get();
-		if (Ptr == ActorToDestroy)
+		if (Iterator->get() == ActorToDestroy)
 		{
 			Iterator = Actors_.erase(Iterator);
 		}

@@ -222,4 +222,32 @@ void NS::Networking::Server_RegisterNewActor(Actor* NewActor, const NS::Identifi
 	PushRequest(ActorCreationRequest);
 }
 
+void NS::Networking::Server_DeRegisterActor(Actor* Actor)
+{
+	std::vector<ReplicatedProp>::const_iterator It = ReplicatedProps_.begin();
+	while (It != ReplicatedProps_.end())
+	{
+		const ReplicatedProp& Prop = *It;
+		if (Prop.ActorPtr == Actor)
+		{
+			It = ReplicatedProps_.erase(It);
+		}
+		else
+		{
+			++It;
+		}
+	}
+	
+	NetRequest Request;
+	Request.Reliability = EReliability::RELIABLE;
+	Request.RequestType = ERequestType::ACTOR_DESTRUCTION;
+	Request.InstanceId = -1;
+	Request.ActorId = ActorRegistry_.at(Actor);
+	Request.ObjectOffset = 0;
+	Request.DataSize = 0;
+	PushRequest(Request);
+	
+	ActorRegistry_.erase(Actor);
+}
+
 #endif
