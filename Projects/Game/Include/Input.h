@@ -33,6 +33,8 @@ namespace NS
 		
 		void BindAxisVertical(const InputAxisBinding& Callback);
 		void UnBindAxisVertical();
+		
+		void BindTurretAxis(const InputAxisBinding& Callback);
 
 	private:
 
@@ -47,6 +49,7 @@ namespace NS
 		static std::unique_ptr<Input> Instance_;
 		InputAxisBinding HorizontalCallback;
 		InputAxisBinding VerticalCallback;
+		InputAxisBinding TurretRotationCallback;
 		std::array<InputActionBinding, sf::Keyboard::ScancodeCount> PressedCallbacks;
 		std::array<InputActionBinding, sf::Keyboard::ScancodeCount> ReleasedCallbacks;
 	};

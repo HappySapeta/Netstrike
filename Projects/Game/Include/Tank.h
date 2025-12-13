@@ -20,15 +20,16 @@ namespace NS
 		{
 			return playerInputInitialized;
 		}
-
-		void SetWindow(const sf::RenderWindow& Window);
-
+	
 	protected:
 		
 		void Server_MoveTankForward();
 		void Server_MoveTankBackward();
 		void Server_TurnLeft();
 		void Server_TurnRight();
+		void Server_TurnTurretClockwise();
+		void Server_TurnTurretAntiClockwise();
+		void Server_Fire();
 
 	private:
 
@@ -39,7 +40,7 @@ namespace NS
 	protected:
 		
 		sf::Vector2f Heading_; // REPLICATED
-		sf::Vector2f TurretHeading_;
+		float TurretAngle_; // REPLICATED
 		
 		SpriteComponent* BodySpriteComp_ = nullptr;
 		SpriteComponent* TurretSpriteComp_ = nullptr;

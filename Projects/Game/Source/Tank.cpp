@@ -5,15 +5,16 @@
 #endif
 
 #include "Actor/SpriteComponent.h"
+#include "Networking/Networking-Macros.h"
 
 constexpr float MOVEMENT_SPEED = 0.05f;
 constexpr float TURN_RATE = 0.02f;
-constexpr float TURRET_TURN_RATE = 0.1f;
+constexpr float TURRET_TURN_RATE = 0.05f;
 
 NS::Tank::Tank()
 {
 	Heading_ = {0, -1};
-	TurretHeading_ = {0, -1};
+	TurretAngle_ = 0.0f;
 	
 	BodySpriteComp_ = AddComponent<SpriteComponent>();
 	BodySpriteComp_->SetTexture(TANK_TEXTURE);
@@ -32,31 +33,46 @@ void NS::Tank::InitInput()
 	playerInputInitialized = true;
 #ifdef NS_CLIENT
 	NS::Input* Input = NS::Input::Get();
-	auto MoveTankVertical = [this](const float Value) -> void
+	NS::Networking* Networking = NS::Networking::Get();
+	
+	auto MoveTankVertical = [this, Networking](const float Value) -> void
 	{
 		if (Value > 0)
 		{
-			NS::Networking::Get()->Client_CallRPC({this, "Server_MoveTankForward"});
+			Networking->Client_CallRPC({this, "Server_MoveTankForward"});
 		}
 		else if (Value < 0)
 		{
-			NS::Networking::Get()->Client_CallRPC({this, "Server_MoveTankBackward"});
+			Networking->Client_CallRPC({this, "Server_MoveTankBackward"});
 		}
 	};
 	Input->BindAxisVertical(MoveTankVertical);
 	
-	auto TurnTank = [this](const float Value)
+	auto TurnTank = [this, Networking](const float Value)
 	{
 		if (Value > 0)
 		{
-			NS::Networking::Get()->Client_CallRPC({this, "Server_TurnRight"});
+			Networking->Client_CallRPC({this, "Server_TurnRight"});
 		}
 		else if (Value < 0)
 		{
-			NS::Networking::Get()->Client_CallRPC({this, "Server_TurnLeft"});
+			Networking->Client_CallRPC({this, "Server_TurnLeft"});
 		}	
 	};
 	Input->BindAxisHorizontal(TurnTank);
+	
+	auto TurnTurret = [this, Networking](const float Value)
+	{
+		if (Value > 0)
+		{
+			Networking->Client_CallRPC({this, "Server_TurnTurretClockwise"});
+		}
+		else if (Value < 0)
+		{
+			Networking->Client_CallRPC({this, "Server_TurnTurretAntiClockwise"});
+		}
+	};
+	Input->BindTurretAxis(TurnTurret);
 #endif
 }
 
@@ -66,30 +82,12 @@ void NS::Tank::Update(const float DeltaTime)
 	BodySpriteComp_->SetRotation(Heading_.angle());
 	BodySpriteComp_->SetPosition(Position_);
 	TurretSpriteComp_->SetPosition(Position_);
-	
-	if (Window_)
-	{
-		sf::Vector2i MousePosition = sf::Mouse::getPosition();
-		sf::Vector2i WindowPosition = Window_->getPosition();
-		sf::Vector2i WindowHalfSize = 
-		{
-			static_cast<int>(Window_->getSize().x / 2), 
-			static_cast<int>(Window_->getSize().y / 2)
-		};
-		sf::Vector2i WindowCenter = WindowPosition + WindowHalfSize;
-		sf::Vector2f RelativeMousePosition = (sf::Vector2f(WindowCenter) - sf::Vector2f(MousePosition)).normalized();
-		TurretSpriteComp_->SetRotation(RelativeMousePosition.angle());
-	}
+	TurretSpriteComp_->SetRotation(sf::degrees(TurretAngle_));
 }
 
 size_t NS::Tank::GetTypeInfo() const
 {
 	return typeid(this).hash_code();
-}
-
-void NS::Tank::SetWindow(const sf::RenderWindow& Window)
-{
-	Window_ = &Window;
 }
 
 void NS::Tank::Server_MoveTankForward()
@@ -112,10 +110,30 @@ void NS::Tank::Server_TurnRight()
 	Heading_ = Heading_.rotatedBy(sf::degrees(TURN_RATE));
 }
 
+void NS::Tank::Server_TurnTurretClockwise()
+{
+	TurretAngle_ += TURRET_TURN_RATE;
+}
+
+void NS::Tank::Server_TurnTurretAntiClockwise()
+{
+	TurretAngle_ -= TURRET_TURN_RATE;
+}
+
+void NS::Tank::Server_Fire()
+{
+	NSLOG(ELogLevel::INFO, "Fired!");
+}
+
 void NS::Tank::GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties)
 {
-	OutReplicatedProperties.push_back({this, offsetof(Tank, Position_), sizeof(Position_)});
-	OutReplicatedProperties.push_back({this, offsetof(Tank, Heading_), sizeof(Heading_)});
+	// OutReplicatedProperties.push_back({this, offsetof(Tank, Position_), sizeof(Position_)});
+	// OutReplicatedProperties.push_back({this, offsetof(Tank, Heading_), sizeof(Heading_)});
+	// OutReplicatedProperties.push_back({this, offsetof(Tank, TurretAngle_), sizeof(TurretAngle_)});
+	
+	DO_REP(Tank, Position_);
+	DO_REP(Tank, Heading_);
+	DO_REP(Tank, TurretAngle_);
 }
 
 void NS::Tank::GetRPCSignatures(std::vector<NS::RPCProp>& OutRpcProps)
@@ -149,6 +167,30 @@ void NS::Tank::GetRPCSignatures(std::vector<NS::RPCProp>& OutRpcProps)
 		if (Tank* TankPtr = dynamic_cast<Tank*>(Actor)) 
 		{
 			TankPtr->Server_TurnRight();
+		}
+	}});
+	
+	OutRpcProps.push_back({"Server_TurnTurretClockwise", [](Actor* Actor)
+	{
+		if (Tank* TankPtr = dynamic_cast<Tank*>(Actor)) 
+		{
+			TankPtr->Server_TurnTurretClockwise();
+		}
+	}});
+	
+	OutRpcProps.push_back({"Server_TurnTurretAntiClockwise", [](Actor* Actor)
+	{
+		if (Tank* TankPtr = dynamic_cast<Tank*>(Actor)) 
+		{
+			TankPtr->Server_TurnTurretAntiClockwise();
+		}
+	}});
+	
+	OutRpcProps.push_back({"Server_Fire", [](Actor* Actor)
+	{
+		if (Tank* TankPtr = dynamic_cast<Tank*>(Actor)) 
+		{
+			TankPtr->Server_Fire();
 		}
 	}});
 }

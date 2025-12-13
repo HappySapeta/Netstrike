@@ -91,6 +91,11 @@ void NS::Input::UnBindAxisVertical()
 	VerticalCallback = nullptr;
 }
 
+void NS::Input::BindTurretAxis(const InputAxisBinding& Callback)
+{
+	TurretRotationCallback = Callback;
+}
+
 void NS::Input::HandleAxes()
 {
 	float HorizontalValue = 0.0f;
@@ -121,6 +126,20 @@ void NS::Input::HandleAxes()
 	if (VerticalCallback)
 	{
 		VerticalCallback(VerticalValue);
+	}
+	
+	float TurretInput = 0.0f;
+	if (sf::Keyboard::isKeyPressed(NS::TurretPositive))
+	{
+		TurretInput += 1.0f;
+	}
+	else if (sf::Keyboard::isKeyPressed(NS::TurretNegative))
+	{
+		TurretInput -= 1.0f;
+	}
+	if (TurretRotationCallback)
+	{
+		TurretRotationCallback(TurretInput);
 	}
 }
 

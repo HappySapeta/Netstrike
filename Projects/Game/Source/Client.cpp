@@ -45,7 +45,6 @@ int main()
 			if (!PlayerTank->GetIsPlayerInputIntialized())
 			{
 				PlayerTank->InitInput();
-				PlayerTank->SetWindow(Window);
 			}
 			
 			View.setCenter(PlayerTank->GetPosition());
