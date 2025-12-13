@@ -4,6 +4,7 @@
 #include "Input.h"
 #endif
 
+#include "InputConfiguration.h"
 #include "Actor/SpriteComponent.h"
 #include "Networking/Networking-Macros.h"
 
@@ -73,6 +74,13 @@ void NS::Tank::InitInput()
 		}
 	};
 	Input->BindTurretAxis(TurnTurret);
+	
+	auto Fire = [this, Networking](const sf::Keyboard::Scancode Scancode)
+	{
+		Networking->Client_CallRPC({this, "Server_Fire"});	
+	};
+	Input->BindOnKeyPressed(NS::Fire, Fire);
+	
 #endif
 }
 
@@ -127,10 +135,6 @@ void NS::Tank::Server_Fire()
 
 void NS::Tank::GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties)
 {
-	// OutReplicatedProperties.push_back({this, offsetof(Tank, Position_), sizeof(Position_)});
-	// OutReplicatedProperties.push_back({this, offsetof(Tank, Heading_), sizeof(Heading_)});
-	// OutReplicatedProperties.push_back({this, offsetof(Tank, TurretAngle_), sizeof(TurretAngle_)});
-	
 	DO_REP(Tank, Position_);
 	DO_REP(Tank, Heading_);
 	DO_REP(Tank, TurretAngle_);
@@ -138,59 +142,11 @@ void NS::Tank::GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutRepli
 
 void NS::Tank::GetRPCSignatures(std::vector<NS::RPCProp>& OutRpcProps)
 {
-	OutRpcProps.push_back({"Server_MoveTankForward", [](Actor* Actor)
-	{
-		if (Tank* TankPtr = dynamic_cast<Tank*>(Actor))
-		{
-			TankPtr->Server_MoveTankForward();
-		}
-	}});
-	
-	OutRpcProps.push_back({"Server_MoveTankBackward", [](Actor* Actor)
-	{
-		if (Tank* TankPtr = dynamic_cast<Tank*>(Actor))
-		{
-			TankPtr->Server_MoveTankBackward();
-		}
-	}});
-	
-	OutRpcProps.push_back({"Server_TurnLeft", [](Actor* Actor)
-	{
-		if (Tank* TankPtr = dynamic_cast<Tank*>(Actor))
-		{
-			TankPtr->Server_TurnLeft();
-		}
-	}});
-	
-	OutRpcProps.push_back({"Server_TurnRight", [](Actor* Actor)
-	{
-		if (Tank* TankPtr = dynamic_cast<Tank*>(Actor)) 
-		{
-			TankPtr->Server_TurnRight();
-		}
-	}});
-	
-	OutRpcProps.push_back({"Server_TurnTurretClockwise", [](Actor* Actor)
-	{
-		if (Tank* TankPtr = dynamic_cast<Tank*>(Actor)) 
-		{
-			TankPtr->Server_TurnTurretClockwise();
-		}
-	}});
-	
-	OutRpcProps.push_back({"Server_TurnTurretAntiClockwise", [](Actor* Actor)
-	{
-		if (Tank* TankPtr = dynamic_cast<Tank*>(Actor)) 
-		{
-			TankPtr->Server_TurnTurretAntiClockwise();
-		}
-	}});
-	
-	OutRpcProps.push_back({"Server_Fire", [](Actor* Actor)
-	{
-		if (Tank* TankPtr = dynamic_cast<Tank*>(Actor)) 
-		{
-			TankPtr->Server_Fire();
-		}
-	}});
+	REGISTER_RPC(Tank, Server_MoveTankBackward)
+	REGISTER_RPC(Tank, Server_MoveTankForward)
+	REGISTER_RPC(Tank, Server_TurnLeft)
+	REGISTER_RPC(Tank, Server_TurnRight)
+	REGISTER_RPC(Tank, Server_TurnTurretClockwise)
+	REGISTER_RPC(Tank, Server_TurnTurretAntiClockwise)
+	REGISTER_RPC(Tank, Server_Fire)
 }
