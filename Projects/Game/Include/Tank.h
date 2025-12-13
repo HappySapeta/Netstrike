@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "Actor/Actor.h"
 
+class SpriteComponent;
+
 namespace NS
 {
 	class Tank : public NS::Actor
@@ -18,13 +20,16 @@ namespace NS
 		{
 			return playerInputInitialized;
 		}
-
+	
 	protected:
 		
 		void Server_MoveTankForward();
 		void Server_MoveTankBackward();
 		void Server_TurnLeft();
 		void Server_TurnRight();
+		void Server_TurnTurretClockwise();
+		void Server_TurnTurretAntiClockwise();
+		void Server_Fire();
 
 	private:
 
@@ -34,9 +39,13 @@ namespace NS
 
 	protected:
 		
-		sf::Vector2f Heading_;
-		class SpriteComponent* SpriteComp_ = nullptr;
+		sf::Vector2f Heading_; // REPLICATED
+		float TurretAngle_; // REPLICATED
 		
+		SpriteComponent* BodySpriteComp_ = nullptr;
+		SpriteComponent* TurretSpriteComp_ = nullptr;
+		const sf::RenderWindow* Window_ = nullptr;
+
 	private:
 		
 		bool playerInputInitialized = false;

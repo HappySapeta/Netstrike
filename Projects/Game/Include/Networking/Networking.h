@@ -34,6 +34,10 @@ namespace NS
 	public:
 
 #ifdef NS_CLIENT // A public client-only functions go here.
+		bool IsConnectedToServer() const
+		{
+			return bIsConnectedToServer;
+		}
 		IdentifierType Client_GetNetId() const
 		{
 			return NetId_;
@@ -42,7 +46,7 @@ namespace NS
 		void Client_ConnectToServer(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
 #endif
 #ifdef NS_SERVER // All public server-only functions go here.
-		bool Server_HasConnections()
+		bool Server_HasConnections() const
 		{
 			return !ConnectedClients_.empty();
 		}
@@ -85,6 +89,7 @@ namespace NS
 #endif
 
 #ifdef NS_CLIENT // A private client-only functions go here.
+		bool bIsConnectedToServer = false;
 		sf::TcpSocket TCPSocket_;
 		sf::SocketSelector Client_Selector_;
 		IdentifierType NetId_ = -1;

@@ -17,7 +17,8 @@ namespace NS
 		virtual void Update(const float DeltaTime) override {};
 		void Draw(sf::RenderWindow& RenderWindow);
 		void SetTexture(const std::string& TextureResource);
-		
+		void SetTextRect(const sf::IntRect& Rect);
+
 		void SetRotation(const sf::Angle& Angle)
 		{
 			Rotation_ = Angle;
