@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "Actor/Actor.h"
 
+class SpriteComponent;
+
 namespace NS
 {
 	class Tank : public NS::Actor
@@ -19,6 +21,8 @@ namespace NS
 			return playerInputInitialized;
 		}
 
+		void SetWindow(const sf::RenderWindow& Window);
+
 	protected:
 		
 		void Server_MoveTankForward();
@@ -34,9 +38,13 @@ namespace NS
 
 	protected:
 		
-		sf::Vector2f Heading_;
-		class SpriteComponent* SpriteComp_ = nullptr;
+		sf::Vector2f Heading_; // REPLICATED
+		sf::Vector2f TurretHeading_;
 		
+		SpriteComponent* BodySpriteComp_ = nullptr;
+		SpriteComponent* TurretSpriteComp_ = nullptr;
+		const sf::RenderWindow* Window_ = nullptr;
+
 	private:
 		
 		bool playerInputInitialized = false;

@@ -16,7 +16,6 @@ int main()
 	sf::RenderWindow Window(sf::VideoMode({NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT}), "!! N E T S T R I K E !!");
 	sf::View View({NS::SCREEN_WIDTH / 2, NS::SCREEN_HEIGHT / 2}, {NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT});
 	
-	
 	Engine->StartSubsystems();
 	
 	while (Window.isOpen() && NS::Networking::Get()->IsConnectedToServer())
@@ -46,6 +45,7 @@ int main()
 			if (!PlayerTank->GetIsPlayerInputIntialized())
 			{
 				PlayerTank->InitInput();
+				PlayerTank->SetWindow(Window);
 			}
 			
 			View.setCenter(PlayerTank->GetPosition());
@@ -55,6 +55,8 @@ int main()
 		
 		// DRAW
 		{
+			const auto WindowPos = Window.getPosition();
+			//NSLOG(NS::ELogLevel::INFO, "Window Position : {},{}", WindowPos.x, WindowPos.y);
 			Window.setView(View);
 			Window.clear();
 			Engine->Draw(Window);

@@ -8,16 +8,18 @@
 
 constexpr float MOVEMENT_SPEED = 0.05f;
 constexpr float TURN_RATE = 0.02f;
+constexpr float TURRET_TURN_RATE = 0.1f;
 
 NS::Tank::Tank()
 {
 	Heading_ = {0, -1};
+	TurretHeading_ = {0, -1};
 	
-	SpriteComp_ = AddComponent<SpriteComponent>();
-	if (SpriteComp_)
-	{
-		SpriteComp_->SetTexture(TANK_TEXTURE);
-	}
+	BodySpriteComp_ = AddComponent<SpriteComponent>();
+	BodySpriteComp_->SetTexture(TANK_TEXTURE);
+	
+	TurretSpriteComp_ = AddComponent<SpriteComponent>();
+	TurretSpriteComp_->SetTexture(TURRET_TEXTURE);
 }
 
 NS::Actor* NS::Tank::CreateCopy()
@@ -61,13 +63,33 @@ void NS::Tank::InitInput()
 void NS::Tank::Update(const float DeltaTime)
 {
 	Actor::Update(DeltaTime);
-	SpriteComp_->SetRotation(Heading_.angle());
-	SpriteComp_->SetPosition(Position_);
+	BodySpriteComp_->SetRotation(Heading_.angle());
+	BodySpriteComp_->SetPosition(Position_);
+	TurretSpriteComp_->SetPosition(Position_);
+	
+	if (Window_)
+	{
+		sf::Vector2i MousePosition = sf::Mouse::getPosition();
+		sf::Vector2i WindowPosition = Window_->getPosition();
+		sf::Vector2i WindowHalfSize = 
+		{
+			static_cast<int>(Window_->getSize().x / 2), 
+			static_cast<int>(Window_->getSize().y / 2)
+		};
+		sf::Vector2i WindowCenter = WindowPosition + WindowHalfSize;
+		sf::Vector2f RelativeMousePosition = (sf::Vector2f(WindowCenter) - sf::Vector2f(MousePosition)).normalized();
+		TurretSpriteComp_->SetRotation(RelativeMousePosition.angle());
+	}
 }
 
 size_t NS::Tank::GetTypeInfo() const
 {
 	return typeid(this).hash_code();
+}
+
+void NS::Tank::SetWindow(const sf::RenderWindow& Window)
+{
+	Window_ = &Window;
 }
 
 void NS::Tank::Server_MoveTankForward()
