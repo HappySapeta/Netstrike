@@ -1,4 +1,5 @@
 ﻿#include "Engine/Engine.h"
+#include "Projectile.h"
 #include "Tank.h"
 
 #define REGISTER_ACTOR(ActorType) \
@@ -14,6 +15,7 @@ NS::Engine::Engine()
 {
 	REGISTER_ACTOR(Actor);
 	REGISTER_ACTOR(Tank);
+	REGISTER_ACTOR(Projectile);
 }
 
 NS::Engine* NS::Engine::Get()

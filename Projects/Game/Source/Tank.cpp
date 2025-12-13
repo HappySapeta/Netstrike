@@ -1,5 +1,9 @@
 ﻿#include "Tank.h"
 
+#include <math.h>
+#include "Projectile.h"
+#include "Engine/Engine.h"
+
 #ifdef NS_CLIENT
 #include "Input.h"
 #endif
@@ -11,6 +15,12 @@
 constexpr float MOVEMENT_SPEED = 0.05f;
 constexpr float TURN_RATE = 0.02f;
 constexpr float TURRET_TURN_RATE = 0.05f;
+constexpr float PROJECTILE_SPEED = 1000.0f;
+
+constexpr float Deg2Rad(const float Deg)
+{
+	return Deg / 57.2958f;
+}
 
 NS::Tank::Tank()
 {
@@ -130,7 +140,12 @@ void NS::Tank::Server_TurnTurretAntiClockwise()
 
 void NS::Tank::Server_Fire()
 {
-	NSLOG(ELogLevel::INFO, "Fired!");
+	Projectile* Projectile = NS::Engine::Get()->CreateActor<NS::Projectile>();
+	
+	sf::Vector2f LaunchVelocity{-sin(Deg2Rad(TurretAngle_ + 90.0f)), cos(Deg2Rad(TurretAngle_ + 90.0f))};
+	LaunchVelocity = LaunchVelocity.normalized() * PROJECTILE_SPEED;
+	Projectile->SetPosition(GetPosition());
+	Projectile->SetVelocity(LaunchVelocity);
 }
 
 void NS::Tank::GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties)

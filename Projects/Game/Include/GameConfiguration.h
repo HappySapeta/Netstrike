@@ -21,4 +21,5 @@ namespace NS
 	inline const char* TANK_TEXTURE = "Textures\\Tank.png";
 	inline const char* GRASS_TEXTURE = "Textures\\Grass.png";
 	inline const char* TURRET_TEXTURE = "Textures\\Turret.png";
+	inline const char* PROJECTILE_TEXTURE = "Textures\\Projectile.png";
 }
