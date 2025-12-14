@@ -54,6 +54,7 @@ namespace NS
 		void Server_CallRPC(const RPCSent& RpcRequest, const Actor* Player = nullptr);
 		void Server_Listen();
 		void Server_RegisterNewActor(Actor* NewActor, IdentifierType AuthNetId = -1);
+		void Server_DeRegisterActor(Actor* Actor);
 #endif
 
 	private:
@@ -76,6 +77,7 @@ namespace NS
 		void Client_ProcessRequest_ActorCreate(const NetRequest& Request);
 		void Client_ProcessRequest_RPC(const NetRequest& Packet);
 		void Client_ProcessRequest_IDAssignment(const NetRequest& Packet);
+		void Client_ProcessRequest_ActorDestruction(const NetRequest& Request);
 #endif
 	
 	private: // DATA MEMBERS

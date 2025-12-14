@@ -20,7 +20,9 @@ namespace NS
 		{
 			return playerInputInitialized;
 		}
-	
+
+		void DoDamage(float Damage);
+
 	protected:
 		
 		void Server_MoveTankForward();
@@ -41,6 +43,7 @@ namespace NS
 		
 		sf::Vector2f Heading_; // REPLICATED
 		float TurretAngle_; // REPLICATED
+		float Health_;
 		
 		SpriteComponent* BodySpriteComp_ = nullptr;
 		SpriteComponent* TurretSpriteComp_ = nullptr;

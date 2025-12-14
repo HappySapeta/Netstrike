@@ -103,6 +103,11 @@ void NS::Networking::Client_ProcessRequests()
 				Client_ProcessRequest_IDAssignment(Request);
 				break;
 			}
+			case ERequestType::ACTOR_DESTRUCTION:
+			{
+				Client_ProcessRequest_ActorDestruction(Request);
+				break;
+			}
 		}
 	}
 }
@@ -136,8 +141,11 @@ void NS::Networking::Client_ProcessRequest_Replication(const NetRequest& Request
 		}
 	}
 	
-	void* DataPtr = reinterpret_cast<char*>(ActorPtr) + Request.ObjectOffset;
-	memcpy_s(DataPtr, Request.DataSize, Request.Data, Request.DataSize);
+	if (ActorPtr)
+	{
+		void* DataPtr = reinterpret_cast<char*>(ActorPtr) + Request.ObjectOffset;
+		memcpy_s(DataPtr, Request.DataSize, Request.Data, Request.DataSize);
+	}
 }
 
 void NS::Networking::Client_ProcessRequest_ActorCreate(const NetRequest& Request)
@@ -167,6 +175,38 @@ void NS::Networking::Client_ProcessRequest_IDAssignment(const NetRequest& Packet
 {
 	NetId_ = Packet.InstanceId;
 	NSLOG(ELogLevel::INFO, "NetId assigned : {}", NetId_);
+}
+
+void NS::Networking::Client_ProcessRequest_ActorDestruction(const NetRequest& Request)
+{
+	Actor* ActorToDestroy = nullptr;
+	for (const auto& [Ptr, Id] : ActorRegistry_)
+	{
+		if (Id == Request.ActorId)
+		{
+			ActorToDestroy = Ptr;
+			break;
+		}
+	}
+	
+	if (ActorToDestroy)
+	{
+		std::vector<ReplicatedProp>::const_iterator It = ReplicatedProps_.begin();
+		while (It != ReplicatedProps_.end())
+		{
+			const ReplicatedProp& Prop = *It;
+			if (Prop.ActorPtr == ActorToDestroy)
+			{
+				It = ReplicatedProps_.erase(It);
+			}
+			else
+			{
+				++It;
+			}
+		}
+		
+		NS::Engine::Get()->DestroyActor(ActorToDestroy);
+	}
 }
 
 #endif

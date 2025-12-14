@@ -22,7 +22,8 @@ namespace NS
 		REPLICATION,
 		RPC,
 		ACTOR_CREATION,
-		ID_ASSIGNMENT
+		ACTOR_DESTRUCTION,
+		ID_ASSIGNMENT, 
 	};
 
 	struct NetClient

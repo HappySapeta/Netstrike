@@ -52,7 +52,8 @@ namespace NS
 		}
 		Actor* CreateActor(const size_t TypeHash);
 		void DestroyActor(Actor* ActorToDestroy);
-		
+
+#ifdef NS_CLIENT
 		template<class ActorType>
 		ActorType* GetOwnedActor()
 		{
@@ -69,10 +70,12 @@ namespace NS
 			
 			return nullptr;
 		}
+#endif
 		
 	private:
 		
 		Engine();
+		void ClearGarbage();
 
 	private:
 
