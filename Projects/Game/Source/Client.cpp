@@ -15,13 +15,16 @@ NS::Tank* PlayerTank = nullptr;
 NS::Engine* Engine = nullptr;
 std::unique_ptr<sf::RenderWindow> Window;
 std::unique_ptr<sf::View> View;
+static bool IsBot = false;
+std::string WindowTitle = "!! N E T S T R I K E !!";
 
 void Initialize();
+void ParseCommandArgs(int argc, char** argv);
 
-int main()
+int main(int argc, char* argv[])
 {
+	ParseCommandArgs(argc, argv);
 	Initialize();
-	
 	Engine->StartSubsystems();
 	
 	float DeltaTime = 0.016f;
@@ -50,7 +53,7 @@ int main()
 		}
 		else
 		{
-			if (!PlayerTank->GetIsInputInitalized())
+			if (!IsBot && !PlayerTank->GetIsInputInitalized())
 			{
 				PlayerTank->InitInput();
 			}
@@ -90,7 +93,7 @@ void Initialize()
 	Engine = NS::Engine::Get();
 	Engine->CreateActor<NS::World>();
 	
-	Window = std::make_unique<sf::RenderWindow>(sf::VideoMode({NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT}), "!! N E T S T R I K E !!");
+	Window = std::make_unique<sf::RenderWindow>(sf::VideoMode({NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT}), WindowTitle);
 	Window->setVerticalSyncEnabled(false);
 	
 	View = std::make_unique<sf::View>
@@ -99,4 +102,30 @@ void Initialize()
 		sf::Vector2f{NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT}
 	);
 	
+}
+
+void ParseCommandArgs(int argc, char* argv[])
+{
+	if (argc >= 2)
+	{
+		const std::string Mode = argv[1];
+		if (Mode == "bot")
+		{
+			WindowTitle += " BOT";
+			NSLOG(NS::ELogLevel::INFO, "Launching game as bot.");
+			IsBot = true;
+		}
+		else
+		{
+			WindowTitle += " PLAYER";
+			NSLOG(NS::ELogLevel::INFO, "Launching game as player.");
+			IsBot = false;
+		}
+	}
+	else
+	{
+		WindowTitle += " PLAYER";
+		NSLOG(NS::ELogLevel::INFO, "Launching game as player.");
+		IsBot = false;
+	}
 }
