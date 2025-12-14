@@ -1,9 +1,10 @@
 ﻿#include "Projectile.h"
 
+#include "Tank.h"
 #include "Engine/Engine.h"
 #include "Networking/Networking-Macros.h"
 
-constexpr float LIFE_TIME = 0.25f;
+constexpr float LIFE_TIME = 0.5f;
 
 NS::Projectile::Projectile()
 {
@@ -12,11 +13,6 @@ NS::Projectile::Projectile()
 	
 	SpriteComponent_ = AddComponent<SpriteComponent>();
 	SpriteComponent_->SetTexture(PROJECTILE_TEXTURE);
-}
-
-NS::Projectile::~Projectile()
-{
-	NSLOG(ELogLevel::INFO, "Projectile destroyed.");
 }
 
 size_t NS::Projectile::GetTypeInfo() const
@@ -49,8 +45,9 @@ void NS::Projectile::Update(const float DeltaTime)
 #endif
 }
 
-void NS::Projectile::SetVelocity(const sf::Vector2f NewVelocity)
+void NS::Projectile::Launch(const sf::Vector2f NewVelocity, const Tank* ParentTank)
 {
+	ParentTank_ = ParentTank;
 	Velocity_ = NewVelocity;
 }
 

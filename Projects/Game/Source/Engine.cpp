@@ -30,6 +30,8 @@ NS::Engine* NS::Engine::Get()
 
 void NS::Engine::Update(const float DeltaTime)
 {
+	ClearGarbage();
+	
 	for (auto& Actor : Actors_)
 	{
 		if (!Actor)
@@ -116,10 +118,15 @@ void NS::Engine::DestroyActor(Actor* ActorToDestroy)
 #ifdef NS_SERVER
 	Networking_->Server_DeRegisterActor(ActorToDestroy);
 #endif
+	ActorToDestroy->SetIsPendingKill(true);
+}
+
+void NS::Engine::ClearGarbage()
+{
 	std::vector<std::unique_ptr<Actor>>::iterator Iterator = Actors_.begin();
 	while (Iterator != Actors_.end())
 	{
-		if (Iterator->get() == ActorToDestroy)
+		if (Iterator->get()->IsPendingKill())
 		{
 			Iterator = Actors_.erase(Iterator);
 		}

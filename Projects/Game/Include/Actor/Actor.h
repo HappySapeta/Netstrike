@@ -60,16 +60,26 @@ namespace NS
 		{
 			return NetId_;
 		}
+		
+		bool IsPendingKill() const
+		{
+			return bIsPendingKill_;
+		}
 
 	private:
 		
 		virtual void GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties) {};
 		virtual void GetRPCSignatures(std::vector<NS::RPCProp>& OutRpcProps) {};
+		void SetIsPendingKill(const bool Value)
+		{
+			bIsPendingKill_ = Value;
+		}
 
 	protected:
 
 		sf::Vector2f Position_ = {0.0f, 0.0f};
 		std::vector<std::unique_ptr<ActorComponent>> Components_;
 		IdentifierType NetId_ = -1;
+		bool bIsPendingKill_ = false;	
 	};
 }
