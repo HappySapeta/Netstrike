@@ -161,9 +161,16 @@ void NS::Networking::Server_ReceivePackets()
 
 void NS::Networking::Server_ProcessRequests()
 {
-	for (const ReplicatedProp& Prop : ReplicatedProps_)
+	for (ReplicatedProp& Prop : ReplicatedProps_)
 	{
 		if (!ActorRegistry_.contains(Prop.ActorPtr))
+		{
+			continue;
+		}
+		
+		void* DataPtr = reinterpret_cast<char*>(Prop.ActorPtr) + Prop.Offset;
+		// Property has not changed.
+		if (memcmp(Prop.PreviousValue.data(), DataPtr, Prop.Size) == 0)
 		{
 			continue;
 		}
@@ -177,8 +184,8 @@ void NS::Networking::Server_ProcessRequests()
 		ReplicationRequest.ObjectOffset = Prop.Offset;
 		ReplicationRequest.DataSize = Prop.Size;  
 		
-		void* DataPtr = reinterpret_cast<char*>(Prop.ActorPtr) + Prop.Offset;
 		memcpy_s(ReplicationRequest.Data, NS::MAX_PACKET_SIZE, DataPtr, Prop.Size);
+		memcpy_s(Prop.PreviousValue.data(), 16, DataPtr, Prop.Size);
 			
 		PushRequest(ReplicationRequest);
 	}

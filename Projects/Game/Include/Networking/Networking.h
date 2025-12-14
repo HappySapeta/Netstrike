@@ -5,8 +5,13 @@
 #include <functional>
 #include <mutex>
 #include <unordered_map>
+#include <chrono>
 
 #include "Networking-Types.h"
+
+typedef std::chrono::high_resolution_clock ChronoClock;
+typedef std::chrono::time_point<std::chrono::high_resolution_clock> ChronoTimePoint;
+typedef std::chrono::duration<std::chrono::high_resolution_clock> ChronoDuration;
 
 namespace NS
 {
@@ -17,8 +22,7 @@ namespace NS
 		[[nodiscard]] static Networking* Get();
 		void Start();
 		void Stop();
-		void Update();
-
+		void UpdateMainThread();
 		void AddReplicateProps(const std::vector<ReplicatedProp>& Props);
 		void AddRPCProps(const std::vector<RPCProp>& RpcProps);
 		void PushRequest(const NetRequest& NewRequest);
@@ -60,7 +64,7 @@ namespace NS
 
 	private:
 		Networking() = default;
-		void UpdateThread();
+		void UpdatedSecondaryThread();
 		void ProcessRequest_RPCReceived(const RPCReceived& RpcRequest);
 		sf::Socket::Status SendPacketHelper(sf::Packet& Packet, sf::TcpSocket& Socket);
 
@@ -113,5 +117,6 @@ namespace NS
 		std::unordered_map<size_t, std::function<void(Actor*)>> FunctionRegistry_;
 		
 		std::mutex QueueMutex_;
+		float LastSendTime_;
 	};
 }

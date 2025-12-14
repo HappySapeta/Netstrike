@@ -43,7 +43,7 @@ void NS::Engine::Update(const float DeltaTime)
 	
 	if (Networking_->HasStarted())
 	{
-		Networking_->Update();
+		Networking_->UpdateMainThread();
 	}
 }
 
