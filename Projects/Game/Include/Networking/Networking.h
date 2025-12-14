@@ -46,6 +46,7 @@ namespace NS
 		void Client_ConnectToServer(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
 #endif
 #ifdef NS_SERVER // All public server-only functions go here.
+		void Server_SetMaxConnections(const int NumMaxConnections);
 		bool Server_HasConnections() const
 		{
 			return !ConnectedClients_.empty();
@@ -88,6 +89,7 @@ namespace NS
 		sf::SocketSelector Server_Selector_;
 		IdentifierType LastActorId = 0;
 		OnClientConnectedDelegate OnClientConnected;
+		int NumMaxConnections_;
 #endif
 
 #ifdef NS_CLIENT // A private client-only functions go here.

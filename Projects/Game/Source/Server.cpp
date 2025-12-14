@@ -82,8 +82,14 @@ void PerformCollisions(const std::vector<NS::Actor*>& Actors)
 	}
 }
 
-int main()
+int main(int argc, char *argv[])
 {
+	int NumMaxConnections = 1;
+	if (argc >= 2)
+	{
+		NumMaxConnections = atoi(argv[1]);
+	}
+	Networking->Server_SetMaxConnections(NumMaxConnections);
 	Networking->Server_AssignOnClientConnected(&OnClientConnected);
 	Engine->StartSubsystems();
 	

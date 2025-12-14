@@ -13,7 +13,7 @@ namespace NS
 	constexpr int64_t SERVER_TICK_DURATION_MS = 20;
 
 	constexpr float DEFAULT_CONNECTION_TIMEOUT = 30.0f;
-	constexpr uint16_t DEBUG_SERVER_MAX_CONNECTIONS = 2;
+	constexpr uint16_t DEBUG_SERVER_MAX_CONNECTIONS = 10;
 	constexpr uint16_t MAX_PACKET_SIZE = 10;
 	constexpr uint16_t SERVER_SELECTOR_WAIT_TIME_MS = 20;
 	constexpr uint16_t CLIENT_SELECTOR_WAIT_TIME_MS = 10;

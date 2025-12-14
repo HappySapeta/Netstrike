@@ -25,7 +25,7 @@ void NS::Networking::Server_CallRPC(const RPCSent& RpcRequest, const Actor* Play
 void NS::Networking::Server_Listen()
 {
 	ListenerSocket_.close();
-	NSLOG(NS::ELogLevel::INFO, "Listening for connections on port {}", NS::SERVER_PORT);
+	NSLOG(NS::ELogLevel::INFO, "Listening for {} connections on port {}", NumMaxConnections_, NS::SERVER_PORT);
 	const sf::Socket::Status ListenStatus = ListenerSocket_.listen(NS::SERVER_PORT);
 	
 	if (ListenStatus != sf::Socket::Status::Done)
@@ -34,7 +34,7 @@ void NS::Networking::Server_Listen()
 		return;
 	}
 
-	int NumClients = NS::DEBUG_SERVER_MAX_CONNECTIONS;
+	int NumClients = NumMaxConnections_;
 	while (NumClients > 0)
 	{
 		ConnectedClients_.emplace_back(std::make_unique<NetClient>());
@@ -74,6 +74,11 @@ void NS::Networking::Server_Listen()
 			OnClientConnected(NewClient.get());
 		}
 	}
+}
+
+void NS::Networking::Server_SetMaxConnections(const int NumMaxConnections)
+{
+	NumMaxConnections_ = NumMaxConnections; 
 }
 
 void NS::Networking::Server_AssignOnClientConnected(OnClientConnectedDelegate Callback)
