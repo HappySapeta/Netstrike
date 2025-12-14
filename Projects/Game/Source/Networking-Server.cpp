@@ -25,7 +25,7 @@ void NS::Networking::Server_CallRPC(const RPCSent& RpcRequest, const Actor* Play
 void NS::Networking::Server_Listen()
 {
 	ListenerSocket_.close();
-	NSLOG(NS::ELogLevel::INFO, "Listening for connections on port {}", NS::SERVER_PORT);
+	NSLOG(NS::ELogLevel::INFO, "Listening for {} connections on port {}", NumMaxConnections_, NS::SERVER_PORT);
 	const sf::Socket::Status ListenStatus = ListenerSocket_.listen(NS::SERVER_PORT);
 	
 	if (ListenStatus != sf::Socket::Status::Done)
@@ -34,7 +34,7 @@ void NS::Networking::Server_Listen()
 		return;
 	}
 
-	int NumClients = NS::DEBUG_SERVER_MAX_CONNECTIONS;
+	int NumClients = NumMaxConnections_;
 	while (NumClients > 0)
 	{
 		ConnectedClients_.emplace_back(std::make_unique<NetClient>());
@@ -76,6 +76,11 @@ void NS::Networking::Server_Listen()
 	}
 }
 
+void NS::Networking::Server_SetMaxConnections(const int NumMaxConnections)
+{
+	NumMaxConnections_ = NumMaxConnections; 
+}
+
 void NS::Networking::Server_AssignOnClientConnected(OnClientConnectedDelegate Callback)
 {
 	OnClientConnected = Callback;
@@ -83,10 +88,13 @@ void NS::Networking::Server_AssignOnClientConnected(OnClientConnectedDelegate Ca
 
 void NS::Networking::Server_SendPackets()
 {
-	while (!OutgoingPackets_.empty())
+	int NumPacketsCleared = 0;
+	while (!OutgoingPackets_.empty() && NumPacketsCleared < NS::SERVER_OUTGOING_BUCKET)
 	{
 		NetRequest Request = OutgoingPackets_.front();
 		OutgoingPackets_.pop_front();
+		++NumPacketsCleared;
+		
 		if (Request.Reliability == EReliability::RELIABLE)
 		{
 			if (Request.InstanceId != -1 && Request.RequestType != ERequestType::ACTOR_CREATION)
@@ -156,9 +164,16 @@ void NS::Networking::Server_ReceivePackets()
 
 void NS::Networking::Server_ProcessRequests()
 {
-	for (const ReplicatedProp& Prop : ReplicatedProps_)
+	for (ReplicatedProp& Prop : ReplicatedProps_)
 	{
 		if (!ActorRegistry_.contains(Prop.ActorPtr))
+		{
+			continue;
+		}
+		
+		void* DataPtr = reinterpret_cast<char*>(Prop.ActorPtr) + Prop.Offset;
+		// Property has not changed.
+		if (memcmp(Prop.PreviousValue.data(), DataPtr, Prop.Size) == 0)
 		{
 			continue;
 		}
@@ -172,8 +187,8 @@ void NS::Networking::Server_ProcessRequests()
 		ReplicationRequest.ObjectOffset = Prop.Offset;
 		ReplicationRequest.DataSize = Prop.Size;  
 		
-		void* DataPtr = reinterpret_cast<char*>(Prop.ActorPtr) + Prop.Offset;
 		memcpy_s(ReplicationRequest.Data, NS::MAX_PACKET_SIZE, DataPtr, Prop.Size);
+		memcpy_s(Prop.PreviousValue.data(), 16, DataPtr, Prop.Size);
 			
 		PushRequest(ReplicationRequest);
 	}

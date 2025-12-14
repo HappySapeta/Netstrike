@@ -5,6 +5,7 @@
 #include <functional>
 #include <mutex>
 #include <unordered_map>
+#include <chrono>
 
 #include "Networking-Types.h"
 
@@ -17,8 +18,7 @@ namespace NS
 		[[nodiscard]] static Networking* Get();
 		void Start();
 		void Stop();
-		void Update();
-
+		void UpdateMainThread();
 		void AddReplicateProps(const std::vector<ReplicatedProp>& Props);
 		void AddRPCProps(const std::vector<RPCProp>& RpcProps);
 		void PushRequest(const NetRequest& NewRequest);
@@ -46,6 +46,7 @@ namespace NS
 		void Client_ConnectToServer(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
 #endif
 #ifdef NS_SERVER // All public server-only functions go here.
+		void Server_SetMaxConnections(const int NumMaxConnections);
 		bool Server_HasConnections() const
 		{
 			return !ConnectedClients_.empty();
@@ -59,7 +60,7 @@ namespace NS
 
 	private:
 		Networking() = default;
-		void UpdateThread();
+		void UpdatedSecondaryThread();
 		void ProcessRequest_RPCReceived(const RPCReceived& RpcRequest);
 		sf::Socket::Status SendPacketHelper(sf::Packet& Packet, sf::TcpSocket& Socket);
 
@@ -88,6 +89,7 @@ namespace NS
 		sf::SocketSelector Server_Selector_;
 		IdentifierType LastActorId = 0;
 		OnClientConnectedDelegate OnClientConnected;
+		int NumMaxConnections_;
 #endif
 
 #ifdef NS_CLIENT // A private client-only functions go here.
@@ -111,5 +113,6 @@ namespace NS
 		std::unordered_map<size_t, std::function<void(Actor*)>> FunctionRegistry_;
 		
 		std::mutex QueueMutex_;
+		float LastSendTime_;
 	};
 }

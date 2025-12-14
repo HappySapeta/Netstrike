@@ -59,7 +59,7 @@ void NS::Networking::Start()
 {
 	NSLOG(ELogLevel::INFO, "Starting network update thread.");
 	hasStarted = true;
-	NetworkUpdateThread_ = std::jthread(&NS::Networking::UpdateThread, this);
+	NetworkUpdateThread_ = std::jthread(&NS::Networking::UpdatedSecondaryThread, this);
 }
 
 void NS::Networking::Stop()
@@ -77,7 +77,7 @@ void NS::Networking::Stop()
 	}
 }
 
-void NS::Networking::Update()
+void NS::Networking::UpdateMainThread()
 {
 	// Populate the queue with incoming requests
 #ifdef NS_CLIENT
@@ -91,7 +91,7 @@ void NS::Networking::Update()
 #endif
 }
 
-void NS::Networking::UpdateThread()
+void NS::Networking::UpdatedSecondaryThread()
 {
 	while (!StopRequested)
 	{

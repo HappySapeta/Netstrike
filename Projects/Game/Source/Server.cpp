@@ -7,16 +7,62 @@
 #include "Tank.h"
 #include "Engine/Engine.h"
 
-using HRClock = std::chrono::high_resolution_clock;
-using TimePoint = std::chrono::high_resolution_clock::time_point;
-using Duration = std::chrono::duration<float>;
-
-static float DeltaTimeSecs = 0.016f;
-constexpr float COLLISION_RADIUS = 100.0f;
-constexpr float DAMAGE = 20.0f;
+typedef std::chrono::high_resolution_clock ChronoClock;
+typedef std::chrono::time_point<std::chrono::high_resolution_clock> ChronoTimePoint;
+typedef std::chrono::duration<float> ChronoDuration;
 
 NS::Engine* Engine = NS::Engine::Get();
 NS::Networking* Networking = NS::Networking::Get();
+
+void PerformCollisions(const std::vector<NS::Actor*>& Actors);
+sf::Vector2f GetRandomPosition();
+void OnClientConnected(const NS::NetClient* NewClient);
+
+constexpr float COLLISION_RADIUS = 100.0f;
+constexpr float DAMAGE = 20.0f;
+
+int main(int argc, char *argv[])
+{
+	int NumMaxConnections = 1;
+	if (argc >= 2)
+	{
+		NumMaxConnections = atoi(argv[1]);
+	}
+	Networking->Server_SetMaxConnections(NumMaxConnections);
+	Networking->Server_AssignOnClientConnected(&OnClientConnected);
+	Engine->StartSubsystems();
+	
+	float DeltaTime = 0.016f;
+	while (Networking->Server_HasConnections())
+	{
+		const ChronoTimePoint TickStart = ChronoClock::now();
+		
+		Engine->Update(DeltaTime);
+		PerformCollisions(Engine->GetActors());
+
+		const ChronoTimePoint TickEnd = ChronoClock::now();
+		const ChronoDuration TickDuration = TickEnd - TickStart;
+		DeltaTime = TickDuration.count();
+
+		// Limit the tick rate of server
+		//{
+		//	const auto TickDurationMs = std::chrono::duration_cast<std::chrono::milliseconds>(TickDuration);
+		//	const auto TimeToWaitMs = NS::SERVER_TICK_DURATION_MS - TickDurationMs.count();
+		//	if (TimeToWaitMs > 0)
+		//	{
+		//		std::this_thread::sleep_for(std::chrono::milliseconds(TimeToWaitMs));
+		//	}
+		//}
+	}
+	
+	NSLOG(NS::ELogLevel::INFO, "All clients have disconnected. Nothing to serve.");
+	
+	Engine->StopSubsystems();
+	
+	std::cin.get(); // prevents the server console from shutting down.
+	
+	return 0;
+}
 
 sf::Vector2f GetRandomPosition()
 {
@@ -81,36 +127,3 @@ void PerformCollisions(const std::vector<NS::Actor*>& Actors)
 		}
 	}
 }
-
-int main()
-{
-	Networking->Server_AssignOnClientConnected(&OnClientConnected);
-	Engine->StartSubsystems();
-	
-	while (Networking->Server_HasConnections())
-	{
-		static TimePoint TickStart;
-		TickStart = HRClock::now();
-		
-		Engine->Update(0.016f);
-		PerformCollisions(Engine->GetActors());
-
-		Duration TickDuration = HRClock::now() - TickStart;
-		DeltaTimeSecs = TickDuration.count();
-
-		const auto TickDurationMs = std::chrono::duration_cast<std::chrono::milliseconds>(TickDuration);
-		const auto TimeToWaitMs = NS::SERVER_TICK_DURATION_MS - TickDurationMs.count();
-		if (TimeToWaitMs > 0)
-		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(TimeToWaitMs));
-		}
-	}
-	
-	NSLOG(NS::ELogLevel::INFO, "All clients have disconnected. Nothing to serve.");
-	
-	Engine->StopSubsystems();
-	
-	std::cin.get(); // prevents the server console from shutting down.
-	
-	return 0;
-}  

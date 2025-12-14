@@ -19,7 +19,7 @@ namespace NS
 
 	public:
 		
-		void SetPosition(const sf::Vector2f& NewPosition);
+		virtual void SetPosition(const sf::Vector2f& NewPosition);
 		sf::Vector2f GetPosition() const;
 		virtual void Update(const float DeltaTime);
 		

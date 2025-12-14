@@ -37,6 +37,7 @@ namespace NS
 		class Actor* ActorPtr;
 		size_t Offset;
 		size_t Size;
+		std::array<char, 16> PreviousValue;
 	};
 	
 	struct RPCProp

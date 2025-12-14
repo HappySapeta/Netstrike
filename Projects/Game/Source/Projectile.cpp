@@ -35,14 +35,12 @@ void NS::Projectile::Update(const float DeltaTime)
 		SpriteComponent_->SetRotation(Velocity_.angle());
 	}
 	
-#ifdef NS_SERVER
 	Position_ = Position_ + Velocity_ * DeltaTime;
 	TimeAlive_ += DeltaTime;
 	if (TimeAlive_ >= LIFE_TIME)
 	{
 		NS::Engine::Get()->DestroyActor(this);
 	}
-#endif
 }
 
 void NS::Projectile::Launch(const sf::Vector2f NewVelocity, const Tank* ParentTank)

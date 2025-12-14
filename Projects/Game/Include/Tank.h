@@ -15,10 +15,11 @@ namespace NS
 		
 		[[nodiscard]] virtual Actor* CreateCopy() override;
 		virtual size_t GetTypeInfo() const override;
+		virtual void SetPosition(const sf::Vector2f& NewPosition) override;
 		void InitInput();
-		bool GetIsPlayerInputIntialized() const
+		bool GetIsInputInitalized() const
 		{
-			return playerInputInitialized;
+			return IsPlayerInputBound_;
 		}
 
 		void DoDamage(float Damage);
@@ -37,10 +38,14 @@ namespace NS
 
 		void GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties) override;
 		void GetRPCSignatures(std::vector<NS::RPCProp>& OutRpcProps) override;
+		sf::Vector2f PerformInterpolation(float DeltaTime);
 		void Update(const float DeltaTime) override;
 
 	protected:
 		
+		sf::Vector2f LocalSimulatedPosition_;
+		sf::Vector2f LocalVelocity_;
+		sf::Vector2f PreviousPosition_;
 		sf::Vector2f Heading_; // REPLICATED
 		float TurretAngle_; // REPLICATED
 		float Health_;
@@ -51,6 +56,6 @@ namespace NS
 
 	private:
 		
-		bool playerInputInitialized = false;
+		bool IsPlayerInputBound_ = false;
 	};
 }

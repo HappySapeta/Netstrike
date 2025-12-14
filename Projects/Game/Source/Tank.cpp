@@ -17,6 +17,7 @@ constexpr float TURN_RATE = 0.02f;
 constexpr float TURRET_TURN_RATE = 0.05f;
 constexpr float PROJECTILE_SPEED = 1000.0f;
 constexpr float TANK_HEALTH = 100.0f;
+constexpr float MAX_POSITION_ERROR = 5.0f;
 
 constexpr float Deg2Rad(const float Deg)
 {
@@ -28,6 +29,9 @@ NS::Tank::Tank()
 	Heading_ = {0, -1};
 	TurretAngle_ = 0.0f;
 	Health_ = TANK_HEALTH;
+	LocalSimulatedPosition_ = {0, 0};
+	LocalVelocity_ = {0, 0};
+	PreviousPosition_ = {0, 0};
 	
 	BodySpriteComp_ = AddComponent<SpriteComponent>();
 	BodySpriteComp_->SetTexture(TANK_TEXTURE);
@@ -43,7 +47,7 @@ NS::Actor* NS::Tank::CreateCopy()
 
 void NS::Tank::InitInput()
 {
-	playerInputInitialized = true;
+	IsPlayerInputBound_ = true;
 #ifdef NS_CLIENT
 	NS::Input* Input = NS::Input::Get();
 	NS::Networking* Networking = NS::Networking::Get();
@@ -52,10 +56,12 @@ void NS::Tank::InitInput()
 	{
 		if (Value > 0)
 		{
+			LocalSimulatedPosition_ = GetPosition() + Heading_ * MOVEMENT_SPEED;
 			Networking->Client_CallRPC({this, "Server_MoveTankForward"});
 		}
 		else if (Value < 0)
 		{
+			LocalSimulatedPosition_ = GetPosition() - Heading_ * MOVEMENT_SPEED;
 			Networking->Client_CallRPC({this, "Server_MoveTankBackward"});
 		}
 	};
@@ -99,15 +105,59 @@ void NS::Tank::InitInput()
 void NS::Tank::Update(const float DeltaTime)
 {
 	Actor::Update(DeltaTime);
-	BodySpriteComp_->SetRotation(Heading_.angle());
+	
+#ifdef NS_CLIENT
+	const sf::Vector2f PredictedPosition = PerformInterpolation(DeltaTime);
+	BodySpriteComp_->SetPosition(PredictedPosition);
+	TurretSpriteComp_->SetPosition(PredictedPosition);
+#endif
+#ifdef NS_SERVER
 	BodySpriteComp_->SetPosition(Position_);
 	TurretSpriteComp_->SetPosition(Position_);
+#endif
+	
+	BodySpriteComp_->SetRotation(Heading_.angle());
 	TurretSpriteComp_->SetRotation(sf::degrees(TurretAngle_));
+	
+	LocalVelocity_ = (Position_ - PreviousPosition_) / DeltaTime;
+	PreviousPosition_ = Position_;
+}
+
+sf::Vector2f NS::Tank::PerformInterpolation(float DeltaTime)
+{
+	// For player
+	if (IsPlayerInputBound_)
+	{
+		const float Distance = (LocalSimulatedPosition_ - Position_).length();
+		if (Distance >= MAX_POSITION_ERROR)
+		{
+			return Position_;
+		}
+		return LocalSimulatedPosition_;
+	}
+	// For bots
+	else
+	{
+		sf::Vector2f PredictedPosition = PreviousPosition_ + LocalVelocity_ * DeltaTime;
+		return PredictedPosition;
+	}
 }
 
 size_t NS::Tank::GetTypeInfo() const
 {
 	return typeid(this).hash_code();
+}
+
+void NS::Tank::SetPosition(const sf::Vector2f& NewPosition)
+{
+	static bool IsPredictedPosInitialized = false;
+	if (!IsPredictedPosInitialized)
+	{
+		LocalSimulatedPosition_ = NewPosition;
+		IsPredictedPosInitialized = true;
+	}
+	
+	Actor::SetPosition(NewPosition);
 }
 
 void NS::Tank::DoDamage(float Damage)
