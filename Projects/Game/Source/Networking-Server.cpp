@@ -130,8 +130,6 @@ void NS::Networking::Server_SendPackets()
 			}
 		}
 	}
-	
-	NSLOG(ELogLevel::INFO, "Packets sent : {}", NumPacketsCleared);
 }
 
 void NS::Networking::Server_ReceivePackets()
