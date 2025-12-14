@@ -11,6 +11,7 @@ namespace NS
 	const sf::IpAddress SERVER_ADDRESS = sf::IpAddress(127,0,0,1);
 	constexpr uint16_t SERVER_PORT = 56789;
 	constexpr int64_t SERVER_TICK_DURATION_MS = 20;
+	constexpr uint16_t SERVER_OUTGOING_BUCKET = 20;
 
 	constexpr float DEFAULT_CONNECTION_TIMEOUT = 30.0f;
 	constexpr uint16_t DEBUG_SERVER_MAX_CONNECTIONS = 10;

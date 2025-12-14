@@ -88,10 +88,13 @@ void NS::Networking::Server_AssignOnClientConnected(OnClientConnectedDelegate Ca
 
 void NS::Networking::Server_SendPackets()
 {
-	while (!OutgoingPackets_.empty())
+	int NumPacketsCleared = 0;
+	while (!OutgoingPackets_.empty() && NumPacketsCleared < NS::SERVER_OUTGOING_BUCKET)
 	{
 		NetRequest Request = OutgoingPackets_.front();
 		OutgoingPackets_.pop_front();
+		++NumPacketsCleared;
+		
 		if (Request.Reliability == EReliability::RELIABLE)
 		{
 			if (Request.InstanceId != -1 && Request.RequestType != ERequestType::ACTOR_CREATION)
@@ -127,6 +130,8 @@ void NS::Networking::Server_SendPackets()
 			}
 		}
 	}
+	
+	NSLOG(ELogLevel::INFO, "Packets sent : {}", NumPacketsCleared);
 }
 
 void NS::Networking::Server_ReceivePackets()
