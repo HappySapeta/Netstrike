@@ -9,10 +9,6 @@
 
 #include "Networking-Types.h"
 
-typedef std::chrono::high_resolution_clock ChronoClock;
-typedef std::chrono::time_point<std::chrono::high_resolution_clock> ChronoTimePoint;
-typedef std::chrono::duration<std::chrono::high_resolution_clock> ChronoDuration;
-
 namespace NS
 {
 	class Networking
