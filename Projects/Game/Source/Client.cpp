@@ -50,7 +50,7 @@ int main()
 		}
 		else
 		{
-			if (!PlayerTank->GetIsPlayerInputIntialized())
+			if (!PlayerTank->GetIsInputInitalized())
 			{
 				PlayerTank->InitInput();
 			}
