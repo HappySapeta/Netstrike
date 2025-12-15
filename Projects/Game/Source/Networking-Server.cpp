@@ -88,12 +88,10 @@ void NS::Networking::Server_AssignOnClientConnected(OnClientConnectedDelegate Ca
 
 void NS::Networking::Server_SendPackets()
 {
-	int NumPacketsCleared = 0;
-	while (!OutgoingPackets_.empty() && NumPacketsCleared < NS::SERVER_OUTGOING_BUCKET)
+	while (!OutgoingPackets_.empty())
 	{
 		NetRequest Request = OutgoingPackets_.front();
 		OutgoingPackets_.pop_front();
-		++NumPacketsCleared;
 		
 		if (Request.Reliability == EReliability::RELIABLE)
 		{
