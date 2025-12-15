@@ -20,6 +20,8 @@ std::string WindowTitle = "!! N E T S T R I K E !!";
 
 void Initialize();
 void ParseCommandArgs(int argc, char** argv);
+void UpdatePlayerTank();
+void UpdateInput();
 
 int main(int argc, char* argv[])
 {
@@ -31,35 +33,8 @@ int main(int argc, char* argv[])
 	while (Window->isOpen() && NS::Networking::Get()->IsConnectedToServer())
 	{
 		const ChronoTimePoint TickStart = ChronoClock::now();
-		const std::optional<sf::Event> Event = Window->pollEvent();
-		if (Event && Window->hasFocus())
-		{
-			if (Event->is<sf::Event::Closed>())
-			{
-				Window->close();
-			}
-			
-			NS::Input::Get()->UpdateEvents(Event);
-		}
-		
-		if (Window->hasFocus())
-		{
-			NS::Input::Get()->UpdateAxes();
-		}
-		
-		if (!PlayerTank)
-		{
-			PlayerTank = NS::Engine::Get()->GetOwnedActor<NS::Tank>();
-		}
-		else
-		{
-			if (!IsBot && !PlayerTank->GetIsInputInitalized())
-			{
-				PlayerTank->InitInput();
-			}
-			
-			View->setCenter(PlayerTank->GetPosition());
-		}
+		UpdateInput();
+		UpdatePlayerTank();
 		
 		Engine->Update(DeltaTime);
 		
@@ -127,5 +102,40 @@ void ParseCommandArgs(int argc, char* argv[])
 		WindowTitle += " PLAYER";
 		NSLOG(NS::ELogLevel::INFO, "Launching game as player.");
 		IsBot = false;
+	}
+}
+
+void UpdatePlayerTank()
+{
+	if (!PlayerTank)
+	{
+		PlayerTank = NS::Engine::Get()->GetOwnedActor<NS::Tank>();
+		if (PlayerTank)
+		{
+			PlayerTank->InitInput(IsBot);
+		}
+	}
+	else
+	{
+		View->setCenter(PlayerTank->GetPosition());
+	}
+}
+
+void UpdateInput()
+{
+	const std::optional<sf::Event> Event = Window->pollEvent();
+	if (Event && Window->hasFocus())
+	{
+		if (Event->is<sf::Event::Closed>())
+		{
+			Window->close();
+		}
+			
+		NS::Input::Get()->UpdateEvents(Event);
+	}
+		
+	if (Window->hasFocus())
+	{
+		NS::Input::Get()->UpdateAxes();
 	}
 }

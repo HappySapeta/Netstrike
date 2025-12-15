@@ -6,7 +6,7 @@ namespace NS
 {
 	constexpr uint16_t SCREEN_WIDTH = 500;
 	constexpr uint16_t SCREEN_HEIGHT = 500;
-	constexpr uint16_t WORLD_SIZE = 2000;
+	constexpr uint16_t WORLD_SIZE = 1000;
 
 	const sf::IpAddress SERVER_ADDRESS = sf::IpAddress(127,0,0,1);
 	constexpr uint16_t SERVER_PORT = 56789;

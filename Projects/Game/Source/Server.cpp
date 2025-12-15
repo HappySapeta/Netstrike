@@ -17,6 +17,7 @@ NS::Networking* Networking = NS::Networking::Get();
 void PerformCollisions(const std::vector<NS::Actor*>& Actors);
 sf::Vector2f GetRandomPosition();
 void OnClientConnected(const NS::NetClient* NewClient);
+void RubberBand(const std::vector<NS::Actor*>& Actors);
 
 constexpr float COLLISION_RADIUS = 100.0f;
 constexpr float DAMAGE = 20.0f;
@@ -39,6 +40,7 @@ int main(int argc, char *argv[])
 		
 		Engine->Update(DeltaTime);
 		PerformCollisions(Engine->GetActors());
+		RubberBand(Engine->GetActors());
 
 		const ChronoTimePoint TickEnd = ChronoClock::now();
 		const ChronoDuration TickDuration = TickEnd - TickStart;
@@ -68,8 +70,8 @@ sf::Vector2f GetRandomPosition()
 {
 	std::random_device Device;
 	std::mt19937 Engine(Device());
-	std::uniform_int_distribution<int> DistributionX(0, 200);
-	std::uniform_int_distribution<int> DistributionY(-200, 0);
+	std::uniform_int_distribution<int> DistributionX(0, NS::WORLD_SIZE);
+	std::uniform_int_distribution<int> DistributionY(-NS::WORLD_SIZE, 0);
 	
 	return {static_cast<float>(DistributionX(Engine)), static_cast<float>(DistributionY(Engine))};
 }
@@ -125,5 +127,32 @@ void PerformCollisions(const std::vector<NS::Actor*>& Actors)
 				}
 			}
 		}
+	}
+}
+
+void RubberBand(const std::vector<NS::Actor*>& Actors)
+{
+	for (NS::Actor* Actor : Actors)
+	{
+		sf::Vector2f NewPosition = Actor->GetPosition();
+		if (NewPosition.x < 0)
+		{
+			NewPosition.x = NS::WORLD_SIZE;
+		}
+		else if (NewPosition.x > NS::WORLD_SIZE)
+		{
+			NewPosition.x = 0;
+		}
+		
+		if (NewPosition.y > 0)
+		{
+			NewPosition.y = -NS::WORLD_SIZE;
+		}
+		else if (NewPosition.y < -NS::WORLD_SIZE)
+		{
+			NewPosition.y = 0;
+		}
+		
+		Actor->SetPosition(NewPosition);
 	}
 }
