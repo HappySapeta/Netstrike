@@ -17,6 +17,7 @@ std::unique_ptr<sf::RenderWindow> Window;
 std::unique_ptr<sf::View> View;
 static bool IsBot = false;
 std::string WindowTitle = "!! N E T S T R I K E !!";
+int PortNumber = NS::SERVER_PORT;
 
 void Initialize();
 void ParseCommandArgs(int argc, char** argv);
@@ -27,6 +28,7 @@ int main(int argc, char* argv[])
 {
 	ParseCommandArgs(argc, argv);
 	Initialize();
+	NS::Networking::Get()->Client_SetPortNumber(PortNumber);
 	Engine->StartSubsystems();
 	
 	float DeltaTime = 0.016f;
@@ -90,7 +92,7 @@ void ParseCommandArgs(int argc, char* argv[])
 			NSLOG(NS::ELogLevel::INFO, "Launching game as bot.");
 			IsBot = true;
 		}
-		else
+		else if (Mode == "player")
 		{
 			WindowTitle += " PLAYER";
 			NSLOG(NS::ELogLevel::INFO, "Launching game as player.");
@@ -102,6 +104,11 @@ void ParseCommandArgs(int argc, char* argv[])
 		WindowTitle += " PLAYER";
 		NSLOG(NS::ELogLevel::INFO, "Launching game as player.");
 		IsBot = false;
+	}
+	
+	if (argc >= 3)
+	{
+		PortNumber = atoi(argv[2]);
 	}
 }
 

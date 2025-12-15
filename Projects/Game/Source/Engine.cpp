@@ -67,7 +67,7 @@ void NS::Engine::StartSubsystems()
 		Networking_->Server_Listen();
 #endif
 #ifdef NS_CLIENT
-		Networking_->Client_ConnectToServer(NS::SERVER_ADDRESS, NS::SERVER_PORT);
+		Networking_->Client_ConnectToServer();
 #endif
 		
 		Networking_->Start();
