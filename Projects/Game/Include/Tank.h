@@ -1,6 +1,6 @@
 ﻿#pragma once
+#include <random>
 #include "Actor/Actor.h"
-
 class SpriteComponent;
 
 namespace NS
@@ -16,10 +16,10 @@ namespace NS
 		[[nodiscard]] virtual Actor* CreateCopy() override;
 		virtual size_t GetTypeInfo() const override;
 		virtual void SetPosition(const sf::Vector2f& NewPosition) override;
-		void InitInput();
+		void InitInput(bool bIsBot);
 		bool GetIsInputInitalized() const
 		{
-			return IsPlayerInputBound_;
+			return bIsPlayerInputBound_;
 		}
 
 		void DoDamage(float Damage);
@@ -28,6 +28,9 @@ namespace NS
 		
 		void Server_MoveTankForward();
 		void Server_MoveTankBackward();
+		void Server_BotMoveForward();
+		void Server_BotTurnLeft();
+		void Server_BotTurnRight();
 		void Server_TurnLeft();
 		void Server_TurnRight();
 		void Server_TurnTurretClockwise();
@@ -56,6 +59,10 @@ namespace NS
 
 	private:
 		
-		bool IsPlayerInputBound_ = false;
+		bool bIsPlayerInputBound_ = false;
+		bool bIsBot_ = false;
+		float WanderTheta_;
+		
+		std::random_device RandomDevice;
 	};
 }

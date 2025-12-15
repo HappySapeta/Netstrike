@@ -15,48 +15,26 @@ NS::Tank* PlayerTank = nullptr;
 NS::Engine* Engine = nullptr;
 std::unique_ptr<sf::RenderWindow> Window;
 std::unique_ptr<sf::View> View;
+static bool IsBot = false;
+std::string WindowTitle = "!! N E T S T R I K E !!";
 
 void Initialize();
+void ParseCommandArgs(int argc, char** argv);
+void UpdatePlayerTank();
+void UpdateInput();
 
-int main()
+int main(int argc, char* argv[])
 {
+	ParseCommandArgs(argc, argv);
 	Initialize();
-	
 	Engine->StartSubsystems();
 	
 	float DeltaTime = 0.016f;
 	while (Window->isOpen() && NS::Networking::Get()->IsConnectedToServer())
 	{
 		const ChronoTimePoint TickStart = ChronoClock::now();
-		const std::optional<sf::Event> Event = Window->pollEvent();
-		if (Event && Window->hasFocus())
-		{
-			if (Event->is<sf::Event::Closed>())
-			{
-				Window->close();
-			}
-			
-			NS::Input::Get()->UpdateEvents(Event);
-		}
-		
-		if (Window->hasFocus())
-		{
-			NS::Input::Get()->UpdateAxes();
-		}
-		
-		if (!PlayerTank)
-		{
-			PlayerTank = NS::Engine::Get()->GetOwnedActor<NS::Tank>();
-		}
-		else
-		{
-			if (!PlayerTank->GetIsInputInitalized())
-			{
-				PlayerTank->InitInput();
-			}
-			
-			View->setCenter(PlayerTank->GetPosition());
-		}
+		UpdateInput();
+		UpdatePlayerTank();
 		
 		Engine->Update(DeltaTime);
 		
@@ -90,7 +68,7 @@ void Initialize()
 	Engine = NS::Engine::Get();
 	Engine->CreateActor<NS::World>();
 	
-	Window = std::make_unique<sf::RenderWindow>(sf::VideoMode({NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT}), "!! N E T S T R I K E !!");
+	Window = std::make_unique<sf::RenderWindow>(sf::VideoMode({NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT}), WindowTitle);
 	Window->setVerticalSyncEnabled(false);
 	
 	View = std::make_unique<sf::View>
@@ -99,4 +77,65 @@ void Initialize()
 		sf::Vector2f{NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT}
 	);
 	
+}
+
+void ParseCommandArgs(int argc, char* argv[])
+{
+	if (argc >= 2)
+	{
+		const std::string Mode = argv[1];
+		if (Mode == "bot")
+		{
+			WindowTitle += " BOT";
+			NSLOG(NS::ELogLevel::INFO, "Launching game as bot.");
+			IsBot = true;
+		}
+		else
+		{
+			WindowTitle += " PLAYER";
+			NSLOG(NS::ELogLevel::INFO, "Launching game as player.");
+			IsBot = false;
+		}
+	}
+	else
+	{
+		WindowTitle += " PLAYER";
+		NSLOG(NS::ELogLevel::INFO, "Launching game as player.");
+		IsBot = false;
+	}
+}
+
+void UpdatePlayerTank()
+{
+	if (!PlayerTank)
+	{
+		PlayerTank = NS::Engine::Get()->GetOwnedActor<NS::Tank>();
+		if (PlayerTank)
+		{
+			PlayerTank->InitInput(IsBot);
+		}
+	}
+	else
+	{
+		View->setCenter(PlayerTank->GetPosition());
+	}
+}
+
+void UpdateInput()
+{
+	const std::optional<sf::Event> Event = Window->pollEvent();
+	if (Event && Window->hasFocus())
+	{
+		if (Event->is<sf::Event::Closed>())
+		{
+			Window->close();
+		}
+			
+		NS::Input::Get()->UpdateEvents(Event);
+	}
+		
+	if (Window->hasFocus())
+	{
+		NS::Input::Get()->UpdateAxes();
+	}
 }

@@ -1,9 +1,6 @@
 ﻿#include "Tank.h"
-
-#include <math.h>
 #include "Projectile.h"
 #include "Engine/Engine.h"
-
 #ifdef NS_CLIENT
 #include "Input.h"
 #endif
@@ -13,7 +10,9 @@
 #include "Networking/Networking-Macros.h"
 
 constexpr float MOVEMENT_SPEED = 0.05f;
+constexpr float BOT_MOVEMENT_SPEED = 0.05f;
 constexpr float TURN_RATE = 0.02f;
+constexpr float BOT_TURN_RATE = 0.02f;
 constexpr float TURRET_TURN_RATE = 0.05f;
 constexpr float PROJECTILE_SPEED = 1000.0f;
 constexpr float TANK_HEALTH = 100.0f;
@@ -22,6 +21,15 @@ constexpr float MAX_POSITION_ERROR = 5.0f;
 constexpr float Deg2Rad(const float Deg)
 {
 	return Deg / 57.2958f;
+}
+sf::Vector2f GetSafeNormal(const sf::Vector2f& Vector)
+{
+	const float Length = Vector.length();
+	if (Length < 0.00001f)
+	{
+		return {0, 0};
+	}
+	return Vector / Length;
 }
 
 NS::Tank::Tank()
@@ -32,6 +40,7 @@ NS::Tank::Tank()
 	LocalSimulatedPosition_ = {0, 0};
 	LocalVelocity_ = {0, 0};
 	PreviousPosition_ = {0, 0};
+	WanderTheta_ = 0.0f;
 	
 	BodySpriteComp_ = AddComponent<SpriteComponent>();
 	BodySpriteComp_->SetTexture(TANK_TEXTURE);
@@ -45,71 +54,103 @@ NS::Actor* NS::Tank::CreateCopy()
 	return new Tank();
 }
 
-void NS::Tank::InitInput()
+void NS::Tank::InitInput(const bool bIsBot)
 {
-	IsPlayerInputBound_ = true;
+	bIsPlayerInputBound_ = true;
+	bIsBot_ = bIsBot;
 #ifdef NS_CLIENT
-	NS::Input* Input = NS::Input::Get();
-	NS::Networking* Networking = NS::Networking::Get();
-	
-	auto MoveTankVertical = [this, Networking](const float Value) -> void
+	if(!bIsBot_)
 	{
-		if (Value > 0)
-		{
-			LocalSimulatedPosition_ = GetPosition() + Heading_ * MOVEMENT_SPEED;
-			Networking->Client_CallRPC({this, "Server_MoveTankForward"});
-		}
-		else if (Value < 0)
-		{
-			LocalSimulatedPosition_ = GetPosition() - Heading_ * MOVEMENT_SPEED;
-			Networking->Client_CallRPC({this, "Server_MoveTankBackward"});
-		}
-	};
-	Input->BindAxisVertical(MoveTankVertical);
+		NS::Input* Input = NS::Input::Get();
+		NS::Networking* Networking = NS::Networking::Get();
 	
-	auto TurnTank = [this, Networking](const float Value)
-	{
-		if (Value > 0)
+		auto MoveTankVertical = [this, Networking](const float Value) -> void
 		{
-			Networking->Client_CallRPC({this, "Server_TurnRight"});
-		}
-		else if (Value < 0)
-		{
-			Networking->Client_CallRPC({this, "Server_TurnLeft"});
-		}	
-	};
-	Input->BindAxisHorizontal(TurnTank);
+			if (Value > 0)
+			{
+				LocalSimulatedPosition_ = GetPosition() + Heading_ * MOVEMENT_SPEED;
+				Networking->Client_CallRPC({this, "Server_MoveTankForward"});
+			}
+			else if (Value < 0)
+			{
+				LocalSimulatedPosition_ = GetPosition() - Heading_ * MOVEMENT_SPEED;
+				Networking->Client_CallRPC({this, "Server_MoveTankBackward"});
+			}
+		};
+		Input->BindAxisVertical(MoveTankVertical);
 	
-	auto TurnTurret = [this, Networking](const float Value)
-	{
-		if (Value > 0)
+		auto TurnTank = [this, Networking](const float Value)
 		{
-			Networking->Client_CallRPC({this, "Server_TurnTurretClockwise"});
-		}
-		else if (Value < 0)
+			if (Value > 0)
+			{
+				Networking->Client_CallRPC({this, "Server_TurnRight"});
+			}
+			else if (Value < 0)
+			{
+				Networking->Client_CallRPC({this, "Server_TurnLeft"});
+			}	
+		};
+		Input->BindAxisHorizontal(TurnTank);
+	
+		auto TurnTurret = [this, Networking](const float Value)
 		{
-			Networking->Client_CallRPC({this, "Server_TurnTurretAntiClockwise"});
-		}
-	};
-	Input->BindTurretAxis(TurnTurret);
+			if (Value > 0)
+			{
+				Networking->Client_CallRPC({this, "Server_TurnTurretClockwise"});
+			}
+			else if (Value < 0)
+			{
+				Networking->Client_CallRPC({this, "Server_TurnTurretAntiClockwise"});
+			}
+		};
+		Input->BindTurretAxis(TurnTurret);
 	
-	auto Fire = [this, Networking](const sf::Keyboard::Scancode Scancode)
-	{
-		Networking->Client_CallRPC({this, "Server_Fire"});	
-	};
-	Input->BindOnKeyPressed(NS::Fire, Fire);
-	
+		auto Fire = [this, Networking](const sf::Keyboard::Scancode Scancode)
+		{
+			Networking->Client_CallRPC({this, "Server_Fire"});	
+		};
+		Input->BindOnKeyPressed(NS::Fire, Fire);
+	}
 #endif
 }
 
 void NS::Tank::Update(const float DeltaTime)
 {
 	Actor::Update(DeltaTime);
-	
 #ifdef NS_CLIENT
 	const sf::Vector2f PredictedPosition = PerformInterpolation(DeltaTime);
 	BodySpriteComp_->SetPosition(PredictedPosition);
 	TurretSpriteComp_->SetPosition(PredictedPosition);
+	
+	if (bIsBot_)
+	{
+		NS::Networking::Get()->Client_CallRPC({this, "Server_BotMoveForward"});
+		
+		std::mt19937 Generator(RandomDevice());
+		std::normal_distribution<float> Distribution(-0.01f, 0.01f);
+		
+		constexpr float WanderRadius = 200.0f;
+		constexpr float WanderLookAhead = 200.0f;
+		const sf::Vector2f WanderCentre = Position_ + Heading_.normalized() * WanderLookAhead;
+		WanderTheta_ += Distribution(Generator);
+		
+		const sf::Vector2f RandPos = 
+		{
+			WanderCentre.x + (WanderRadius * std::cos(Deg2Rad(WanderTheta_))), 
+			WanderCentre.y + (WanderRadius * std::sin(Deg2Rad(WanderTheta_)))
+		};
+		
+		const sf::Vector2f TargetHeading = GetSafeNormal(RandPos - Position_);
+		const float TargetHeadingAngle = TargetHeading.length() == 0 ? 0.0f : TargetHeading.angle().asDegrees();
+		if (TargetHeadingAngle > 0)
+		{
+			NS::Networking::Get()->Client_CallRPC({this, "Server_BotTurnRight"});
+		}
+		else
+		{
+			NS::Networking::Get()->Client_CallRPC({this, "Server_BotTurnLeft"});
+		}
+	}
 #endif
 #ifdef NS_SERVER
 	BodySpriteComp_->SetPosition(Position_);
@@ -126,7 +167,7 @@ void NS::Tank::Update(const float DeltaTime)
 sf::Vector2f NS::Tank::PerformInterpolation(float DeltaTime)
 {
 	// For player
-	if (IsPlayerInputBound_)
+	if (bIsPlayerInputBound_)
 	{
 		const float Distance = (LocalSimulatedPosition_ - Position_).length();
 		if (Distance >= MAX_POSITION_ERROR)
@@ -181,6 +222,21 @@ void NS::Tank::Server_MoveTankBackward()
 	SetPosition(GetPosition() - Heading_ * MOVEMENT_SPEED);
 }
 
+void NS::Tank::Server_BotMoveForward()
+{
+	SetPosition(GetPosition() + Heading_ * BOT_MOVEMENT_SPEED);
+}
+
+void NS::Tank::Server_BotTurnLeft()
+{
+	Heading_ = Heading_.rotatedBy(sf::degrees(-BOT_TURN_RATE));
+}
+
+void NS::Tank::Server_BotTurnRight()
+{
+	Heading_ = Heading_.rotatedBy(sf::degrees(BOT_TURN_RATE));
+}
+
 void NS::Tank::Server_TurnLeft()
 {
 	Heading_ = Heading_.rotatedBy(sf::degrees(-TURN_RATE));
@@ -206,7 +262,7 @@ void NS::Tank::Server_Fire()
 	Projectile* Projectile = NS::Engine::Get()->CreateActor<NS::Projectile>();
 	
 	sf::Vector2f LaunchVelocity{-sin(Deg2Rad(TurretAngle_ + 90.0f)), cos(Deg2Rad(TurretAngle_ + 90.0f))};
-	LaunchVelocity = LaunchVelocity.normalized() * PROJECTILE_SPEED;
+	LaunchVelocity = GetSafeNormal(LaunchVelocity) * PROJECTILE_SPEED;
 	Projectile->SetPosition(GetPosition());
 	Projectile->Launch(LaunchVelocity, this);
 }
@@ -227,4 +283,7 @@ void NS::Tank::GetRPCSignatures(std::vector<NS::RPCProp>& OutRpcProps)
 	REGISTER_RPC(Tank, Server_TurnTurretClockwise)
 	REGISTER_RPC(Tank, Server_TurnTurretAntiClockwise)
 	REGISTER_RPC(Tank, Server_Fire)
+	REGISTER_RPC(Tank, Server_BotTurnLeft);
+	REGISTER_RPC(Tank, Server_BotTurnRight);
+	REGISTER_RPC(Tank, Server_BotMoveForward);
 }
