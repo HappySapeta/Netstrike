@@ -11,6 +11,7 @@ typedef std::chrono::high_resolution_clock ChronoClock;
 typedef std::chrono::time_point<std::chrono::high_resolution_clock> ChronoTimePoint;
 typedef std::chrono::duration<float> ChronoDuration;
 
+int PortNumber = NS::SERVER_PORT;
 NS::Engine* Engine = NS::Engine::Get();
 NS::Networking* Networking = NS::Networking::Get();
 
@@ -29,6 +30,12 @@ int main(int argc, char *argv[])
 	{
 		NumMaxConnections = atoi(argv[1]);
 	}
+	if (argc >= 3)
+	{
+		PortNumber = atoi(argv[2]);
+	}
+	
+	Networking->Server_SetPortNumber(PortNumber);
 	Networking->Server_SetMaxConnections(NumMaxConnections);
 	Networking->Server_AssignOnClientConnected(&OnClientConnected);
 	Engine->StartSubsystems();

@@ -34,6 +34,7 @@ namespace NS
 	public:
 
 #ifdef NS_CLIENT // A public client-only functions go here.
+		void Client_SetPortNumber(int PortNumber);
 		bool IsConnectedToServer() const
 		{
 			return bIsConnectedToServer;
@@ -43,9 +44,10 @@ namespace NS
 			return NetId_;
 		}
 		void Client_CallRPC(const RPCSent& RpcRequest);
-		void Client_ConnectToServer(const sf::IpAddress& ServerAddress, const uint16_t ServerPort);
+		void Client_ConnectToServer();
 #endif
 #ifdef NS_SERVER // All public server-only functions go here.
+		void Server_SetPortNumber(int PortNumber);
 		void Server_SetMaxConnections(const int NumMaxConnections);
 		bool Server_HasConnections() const
 		{
@@ -83,20 +85,22 @@ namespace NS
 	
 	private: // DATA MEMBERS
 
-#ifdef NS_SERVER
+#ifdef NS_SERVER // A private server-only data goes here.
 		sf::TcpListener ListenerSocket_;
 		ClientVectorType ConnectedClients_;
 		sf::SocketSelector Server_Selector_;
 		IdentifierType LastActorId = 0;
 		OnClientConnectedDelegate OnClientConnected;
 		int NumMaxConnections_;
+		int ServerPortNumber_ = NS::SERVER_PORT;
 #endif
 
-#ifdef NS_CLIENT // A private client-only functions go here.
+#ifdef NS_CLIENT // A private client-only data goes here.
 		bool bIsConnectedToServer = false;
 		sf::TcpSocket TCPSocket_;
 		sf::SocketSelector Client_Selector_;
 		IdentifierType NetId_ = -1;
+		int PortNumber_ = NS::SERVER_PORT;
 #endif
 		
 		static std::unique_ptr<Networking> Instance_; 

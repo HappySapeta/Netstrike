@@ -4,17 +4,17 @@
 #include "Engine/Engine.h"
 #include "Networking/Networking.h"
 
-void NS::Networking::Client_ConnectToServer(const sf::IpAddress& ServerAddress, const uint16_t ServerPort)
+void NS::Networking::Client_ConnectToServer()
 {
 	TCPSocket_.disconnect();
-	const auto ConnectStatus = TCPSocket_.connect(ServerAddress, ServerPort, sf::seconds(NS::DEFAULT_CONNECTION_TIMEOUT));
+	const auto ConnectStatus = TCPSocket_.connect(NS::SERVER_ADDRESS, PortNumber_, sf::seconds(NS::DEFAULT_CONNECTION_TIMEOUT));
 	if (ConnectStatus != sf::Socket::Status::Done)
 	{
-		NSLOG(NS::ELogLevel::ERROR, "Failed to connect to Server with address {}:{}", ServerAddress.toString(), ServerPort);
+		NSLOG(NS::ELogLevel::ERROR, "Failed to connect to Server with address {}:{}", NS::SERVER_ADDRESS.toString(), PortNumber_);
 	}
 	else
 	{
-		NSLOG(NS::ELogLevel::INFO, "Connected successfully to server at {}:{}", ServerAddress.toString(), ServerPort);
+		NSLOG(NS::ELogLevel::INFO, "Connected successfully to server at {}:{}", NS::SERVER_ADDRESS.toString(), PortNumber_);
 	}
 
 	TCPSocket_.setBlocking(false);
@@ -110,6 +110,11 @@ void NS::Networking::Client_ProcessRequests()
 			}
 		}
 	}
+}
+
+void NS::Networking::Client_SetPortNumber(int PortNumber)
+{
+	PortNumber_ = PortNumber;
 }
 
 void NS::Networking::Client_CallRPC(const RPCSent& RpcRequest)
