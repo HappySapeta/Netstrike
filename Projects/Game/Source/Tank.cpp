@@ -9,14 +9,15 @@
 #include "Actor/SpriteComponent.h"
 #include "Networking/Networking-Macros.h"
 
-constexpr float MOVEMENT_SPEED = 0.05f;
-constexpr float BOT_MOVEMENT_SPEED = 0.05f;
-constexpr float TURN_RATE = 0.02f;
-constexpr float BOT_TURN_RATE = 0.02f;
-constexpr float TURRET_TURN_RATE = 0.05f;
+constexpr float MOVEMENT_SPEED = 1.0f;
+constexpr float BOT_MOVEMENT_SPEED = 1.0f;
+constexpr float TURN_RATE = 1.0f;
+constexpr float BOT_TURN_RATE = 1.0f;
+constexpr float TURRET_TURN_RATE = 1.0f;
 constexpr float PROJECTILE_SPEED = 1000.0f;
 constexpr float TANK_HEALTH = 100.0f;
 constexpr float MAX_POSITION_ERROR = 5.0f;
+constexpr float FIRE_DELAY = 0.5f;
 
 constexpr float Deg2Rad(const float Deg)
 {
@@ -41,6 +42,7 @@ NS::Tank::Tank()
 	LocalVelocity_ = {0, 0};
 	PreviousPosition_ = {0, 0};
 	WanderTheta_ = 0.0f;
+	LastFiredTime = ChronoClock::now();
 	
 	BodySpriteComp_ = AddComponent<SpriteComponent>();
 	BodySpriteComp_->SetTexture(TANK_TEXTURE);
@@ -107,7 +109,12 @@ void NS::Tank::InitInput(const bool bIsBot)
 	
 		auto Fire = [this, Networking](const sf::Keyboard::Scancode Scancode)
 		{
-			Networking->Client_CallRPC({this, "Server_Fire"});	
+			const ChronoDuration TimeSinceLastFired = ChronoClock::now() - LastFiredTime;
+			if (TimeSinceLastFired.count() > FIRE_DELAY)
+			{
+				LastFiredTime = ChronoClock::now();
+				Networking->Client_CallRPC({this, "Server_Fire"});
+			}
 		};
 		Input->BindOnKeyPressed(NS::Fire, Fire);
 	}
@@ -127,10 +134,11 @@ void NS::Tank::Update(const float DeltaTime)
 		NS::Networking::Get()->Client_CallRPC({this, "Server_BotMoveForward"});
 		
 		std::mt19937 Generator(RandomDevice());
-		std::normal_distribution<float> Distribution(-0.01f, 0.01f);
+		Generator.seed(NetId_);
+		std::normal_distribution<float> Distribution(-1.0f, 1.0f);
 		
-		constexpr float WanderRadius = 200.0f;
-		constexpr float WanderLookAhead = 200.0f;
+		constexpr float WanderRadius = 500.0f;
+		constexpr float WanderLookAhead = 300.0f;
 		const sf::Vector2f WanderCentre = Position_ + Heading_.normalized() * WanderLookAhead;
 		WanderTheta_ += Distribution(Generator);
 		

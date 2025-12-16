@@ -11,6 +11,7 @@ typedef std::chrono::high_resolution_clock ChronoClock;
 typedef std::chrono::time_point<std::chrono::high_resolution_clock> ChronoTimePoint;
 typedef std::chrono::duration<float> ChronoDuration;
 
+constexpr float MAX_FRAME_RATE = 120;
 NS::Tank* PlayerTank = nullptr;
 NS::Engine* Engine = nullptr;
 std::unique_ptr<sf::RenderWindow> Window;
@@ -70,6 +71,7 @@ void Initialize()
 	
 	Window = std::make_unique<sf::RenderWindow>(sf::VideoMode({NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT}), WindowTitle);
 	Window->setVerticalSyncEnabled(false);
+	Window->setFramerateLimit(MAX_FRAME_RATE);
 	
 	View = std::make_unique<sf::View>
 	(

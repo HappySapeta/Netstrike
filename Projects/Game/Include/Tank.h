@@ -3,6 +3,10 @@
 #include "Actor/Actor.h"
 class SpriteComponent;
 
+typedef std::chrono::high_resolution_clock ChronoClock;
+typedef std::chrono::time_point<std::chrono::high_resolution_clock> ChronoTimePoint;
+typedef std::chrono::duration<float> ChronoDuration;
+
 namespace NS
 {
 	class Tank : public NS::Actor
@@ -64,5 +68,6 @@ namespace NS
 		float WanderTheta_;
 		
 		std::random_device RandomDevice;
+		ChronoTimePoint LastFiredTime;
 	};
 }

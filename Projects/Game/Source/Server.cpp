@@ -19,7 +19,7 @@ sf::Vector2f GetRandomPosition();
 void OnClientConnected(const NS::NetClient* NewClient);
 void RubberBand(const std::vector<NS::Actor*>& Actors);
 
-constexpr float COLLISION_RADIUS = 100.0f;
+constexpr float COLLISION_RADIUS = 25.0f;
 constexpr float DAMAGE = 20.0f;
 
 int main(int argc, char *argv[])
