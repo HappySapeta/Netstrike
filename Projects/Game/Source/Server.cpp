@@ -22,18 +22,17 @@ void RubberBand(const std::vector<NS::Actor*>& Actors);
 
 constexpr float COLLISION_RADIUS = 25.0f;
 constexpr float DAMAGE = 20.0f;
+int NumMaxConnections = NS::DEBUG_SERVER_MAX_CONNECTIONS;
+
+void ParseArguments(int argc, char** argv);
+sf::Vector2f GetRandomPosition();
+void OnClientConnected(const NS::NetClient* NewClient);
+void PerformCollisions(const std::vector<NS::Actor*>& Actors);
+void RubberBand(const std::vector<NS::Actor*>& Actors);
 
 int main(int argc, char *argv[])
 {
-	int NumMaxConnections = 1;
-	if (argc >= 2)
-	{
-		NumMaxConnections = atoi(argv[1]);
-	}
-	if (argc >= 3)
-	{
-		PortNumber = atoi(argv[2]);
-	}
+	ParseArguments(argc, argv);
 	
 	Networking->Server_SetPortNumber(PortNumber);
 	Networking->Server_SetMaxConnections(NumMaxConnections);
@@ -71,6 +70,19 @@ int main(int argc, char *argv[])
 	std::cin.get(); // prevents the server console from shutting down.
 	
 	return 0;
+}
+
+void ParseArguments(int argc, char** argv)
+{
+	if (argc == 2)
+	{
+		NumMaxConnections = atoi(argv[1]);
+	}
+	else if (argc == 3)
+	{
+		NumMaxConnections = atoi(argv[1]);
+		PortNumber = atoi(argv[2]);
+	}
 }
 
 sf::Vector2f GetRandomPosition()
