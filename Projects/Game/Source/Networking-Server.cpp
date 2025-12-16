@@ -25,12 +25,12 @@ void NS::Networking::Server_CallRPC(const RPCSent& RpcRequest, const Actor* Play
 void NS::Networking::Server_Listen()
 {
 	ListenerSocket_.close();
-	NSLOG(NS::ELogLevel::INFO, "Listening for {} connections on port {}", NumMaxConnections_, NS::SERVER_PORT);
-	const sf::Socket::Status ListenStatus = ListenerSocket_.listen(NS::SERVER_PORT);
+	NSLOG(NS::ELogLevel::INFO, "Listening for {} connections on port {}", NumMaxConnections_, ServerPortNumber_);
+	const sf::Socket::Status ListenStatus = ListenerSocket_.listen(ServerPortNumber_);
 	
 	if (ListenStatus != sf::Socket::Status::Done)
 	{
-		NSLOG(ELogLevel::ERROR, "[SERVER] Failed to listen on port {}.", NS::SERVER_PORT);
+		NSLOG(ELogLevel::ERROR, "[SERVER] Failed to listen on port {}.", ServerPortNumber_);
 		return;
 	}
 
@@ -74,6 +74,11 @@ void NS::Networking::Server_Listen()
 			OnClientConnected(NewClient.get());
 		}
 	}
+}
+
+void NS::Networking::Server_SetPortNumber(int PortNumber)
+{
+	ServerPortNumber_ = PortNumber;
 }
 
 void NS::Networking::Server_SetMaxConnections(const int NumMaxConnections)
