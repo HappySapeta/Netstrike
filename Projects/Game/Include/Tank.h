@@ -21,12 +21,27 @@ namespace NS
 		virtual size_t GetTypeInfo() const override;
 		virtual void SetPosition(const sf::Vector2f& NewPosition) override;
 		void InitInput(bool bIsBot);
+		void BotUpdate();
+
+		void SetShouldPerformInterpolation(const bool Value)
+		{
+			bShouldDoInterpolation_ = Value;
+		}
 		bool GetIsInputInitalized() const
 		{
 			return bIsPlayerInputBound_;
 		}
 
 		void DoDamage(float Damage);
+		sf::Vector2f GetInterpolatedPosition() const
+		{
+			if (bShouldDoInterpolation_)
+			{
+				return InterpolatedPosition_;
+			}
+			
+			return GetPosition();
+		}
 
 	protected:
 		
@@ -60,6 +75,7 @@ namespace NS
 		SpriteComponent* BodySpriteComp_ = nullptr;
 		SpriteComponent* TurretSpriteComp_ = nullptr;
 		const sf::RenderWindow* Window_ = nullptr;
+		sf::Vector2f InterpolatedPosition_;
 
 	private:
 		
@@ -69,5 +85,6 @@ namespace NS
 		
 		std::random_device RandomDevice;
 		ChronoTimePoint LastFiredTime;
+		bool bShouldDoInterpolation_ = true;
 	};
 }

@@ -7,7 +7,7 @@
 
 namespace NS
 {
-	typedef std::uint64_t IdentifierType;
+	typedef int IdentifierType;
 	typedef int InstanceIdType;
 	static constexpr InstanceIdType NS_BROADCAST_ID = -1;
 

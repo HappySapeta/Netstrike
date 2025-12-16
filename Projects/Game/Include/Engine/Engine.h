@@ -5,6 +5,8 @@
 
 #include "Actor/Actor.h"
 
+typedef std::function<void(NS::Actor*)> OnActorCreatedDelegate;
+
 namespace NS
 {
 	class Engine
@@ -17,6 +19,10 @@ namespace NS
 		void StartSubsystems();
 		void StopSubsystems();
 		std::vector<NS::Actor*> GetActors() const;
+		void AssignOnActorCreated(OnActorCreatedDelegate Callback)
+		{
+			OnActorCreated_ = Callback;
+		}
 
 #pragma region DELETED METHODS
 		Engine(const Engine&) = delete;
@@ -82,6 +88,7 @@ namespace NS
 		static std::unique_ptr<Engine> Instance_;
 		std::vector<std::unique_ptr<Actor>> Actors_;
 		NS::Networking* Networking_;
+		OnActorCreatedDelegate OnActorCreated_;
 		std::unordered_map<size_t, std::unique_ptr<Actor>> ActorConstructors_;
 	};
 }
