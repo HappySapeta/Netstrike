@@ -1,5 +1,15 @@
 ## CMP425/501 Assessment Project
 
+### Net Strike
+A multiplayer game featuring a custom server–client networking architecture inspired by Unreal Engine.
+Made with SFML and written in C++.
+Key Features:
+1. Server to Client Replication
+2. Client to Server RPC
+3. Server to Client RPC
+4. Client side network prediction
+
+
 ## Author
 **Name : Anupam Sahu**
 <br>**ID : 2500025**
