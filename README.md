@@ -1,13 +1,40 @@
-## CMP425/501 Assessment Project Template.
+## CMP425/501 Assessment Project
 
-This is an template project that renders an empty SFML window.
-Use this as a starting point of your final assessment. There are two build configurations -- client and server. You can include/exclude source files for each configuration, if you need to build different versions of your game.
-
-**Update this readme file with your name and student number and any relevant instructions for building and running your game.**
-
-
-
+## Author
 **Name : Anupam Sahu**
+<br>**ID : 2500025**
 
-**ID : 2500025**
+
+## Getting Started
+Visual Studio 2019 or 2026 is recommended.
+
+<ins>1. Downloading the repository:</ins>
+
+Clone the repository with `git clone https://github.com/Abertay-University-SDI/assessment-project-HappySapeta.git`.
+
+<ins>2. Generating the Visual Studio project:</ins>
+
+Launch `GenerateProjectFiles.bat`
+
+## Testing the game-application.
+
+<ins>1.Launching the Net Strike Server:</ins>
+
+Run `LaunchServer.bat <NUMBER OF CLIENTS> <PORT NUMBER>`
+
+<ins>2.Launching the Net Strike Clients:</ins>
+
+Run `LaunchClients.bat <NUMBER OF CLIENTS> <PORT NUMBER> <USE NETWORK INTERPOLATION>`
+<br>`<USE NETWORK INTERPOLATION>` : 1 for ON, 0 for OFF
+
+<ins>3.Playing the game:</ins>
+
+WASD to move the Tank.
+<br> SPACEBAR to fire weapon.
+
+
+
+
+
+
 
