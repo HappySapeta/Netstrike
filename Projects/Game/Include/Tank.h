@@ -61,11 +61,13 @@ namespace NS
 		void GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties) override;
 		void GetRPCSignatures(std::vector<NS::RPCProp>& OutRpcProps) override;
 		sf::Vector2f PerformInterpolation(float DeltaTime);
+		sf::Vector2f PerformHeadingInterpolation(float DeltaTime);
 		void Update(const float DeltaTime) override;
 
 	protected:
 		
 		sf::Vector2f LocalSimulatedPosition_;
+		sf::Vector2f LocalSimulatedHeading_;
 		sf::Vector2f LocalVelocity_;
 		sf::Vector2f PreviousPosition_;
 		sf::Vector2f Heading_; // REPLICATED
@@ -76,6 +78,7 @@ namespace NS
 		SpriteComponent* TurretSpriteComp_ = nullptr;
 		const sf::RenderWindow* Window_ = nullptr;
 		sf::Vector2f InterpolatedPosition_;
+		sf::Vector2f InterpolatedHeading_;
 
 	private:
 		
