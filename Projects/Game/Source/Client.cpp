@@ -19,11 +19,13 @@ std::unique_ptr<sf::View> View;
 static bool IsBot = false;
 std::string WindowTitle = "!! N E T S T R I K E !!";
 int PortNumber = NS::SERVER_PORT;
+bool bShouldPerformInterpolation = true;
 
 void Initialize();
 void ParseCommandArgs(int argc, char** argv);
 void UpdatePlayerTank();
 void UpdateInput();
+void OnActorCreated(NS::Actor*);
 
 int main(int argc, char* argv[])
 {
@@ -33,8 +35,10 @@ int main(int argc, char* argv[])
 	Engine->StartSubsystems();
 	
 	float DeltaTime = 0.016f;
-	while (Window->isOpen() && NS::Networking::Get()->IsConnectedToServer())
+	bool bShouldUpdate;
+	do
 	{
+		bShouldUpdate = (IsBot || Window->isOpen()) && NS::Networking::Get()->IsConnectedToServer();
 		const ChronoTimePoint TickStart = ChronoClock::now();
 		UpdateInput();
 		UpdatePlayerTank();
@@ -42,6 +46,7 @@ int main(int argc, char* argv[])
 		Engine->Update(DeltaTime);
 		
 		// DRAW
+		if (Window)
 		{
 			Window->setView(*View.get());
 			Window->clear();
@@ -52,11 +57,22 @@ int main(int argc, char* argv[])
 		const ChronoTimePoint TickEnd = ChronoClock::now();
 		const ChronoDuration TickDuration = (TickEnd - TickStart);
 		DeltaTime = TickDuration.count();
-	}
+		
+		// Limit the tick rate of the client
+		if (IsBot)
+		{
+			const auto TickDurationMs = std::chrono::duration_cast<std::chrono::milliseconds>(TickDuration);
+			const auto TimeToWaitMs = 8 - TickDurationMs.count();
+			if (TimeToWaitMs > 0)
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(TimeToWaitMs));
+			}
+		}
+	}while (bShouldUpdate);
 	
 	Engine->StopSubsystems();
 	
-	if (Window->isOpen())
+	if (Window && Window->isOpen())
 	{
 		Window->close();
 	}
@@ -66,14 +82,28 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
+void OnActorCreated(NS::Actor* Actor)
+{
+	if (NS::Tank* Tank = dynamic_cast<NS::Tank*>(Actor))
+	{
+		Tank->SetShouldPerformInterpolation(bShouldPerformInterpolation);
+	}
+}
+
 void Initialize()
 {
 	Engine = NS::Engine::Get();
+	Engine->AssignOnActorCreated(OnActorCreated);
 	Engine->CreateActor<NS::World>();
+	
+	if (IsBot)
+	{
+		return;
+	}
 	
 	Window = std::make_unique<sf::RenderWindow>(sf::VideoMode({NS::SCREEN_WIDTH, NS::SCREEN_HEIGHT}), WindowTitle);
 	Window->setVerticalSyncEnabled(false);
-	Window->setFramerateLimit(MAX_FRAME_RATE);
+	Window->setFramerateLimit(static_cast<unsigned int>(MAX_FRAME_RATE));
 	
 	View = std::make_unique<sf::View>
 	(
@@ -112,6 +142,20 @@ void ParseCommandArgs(int argc, char* argv[])
 	{
 		PortNumber = atoi(argv[2]);
 	}
+	
+	if (argc >= 4)
+	{
+		int Value = atoi(argv[3]);
+		bShouldPerformInterpolation = Value == 0 ? false : true;
+		if (bShouldPerformInterpolation)
+		{
+			NSLOG(NS::ELogLevel::INFO, "Interpolation is ON.")
+		}
+		else
+		{
+			NSLOG(NS::ELogLevel::INFO, "Interpolation is OFF.")
+		}
+	}
 }
 
 void UpdatePlayerTank()
@@ -126,12 +170,20 @@ void UpdatePlayerTank()
 	}
 	else
 	{
-		View->setCenter(PlayerTank->GetPosition());
+		if (View)
+		{
+			View->setCenter(PlayerTank->GetInterpolatedPosition());
+		}
 	}
 }
 
 void UpdateInput()
 {
+	if (!Window)
+	{
+		return;
+	}
+	
 	const std::optional<sf::Event> Event = Window->pollEvent();
 	if (Event && Window->hasFocus())
 	{

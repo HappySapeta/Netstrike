@@ -21,12 +21,27 @@ namespace NS
 		virtual size_t GetTypeInfo() const override;
 		virtual void SetPosition(const sf::Vector2f& NewPosition) override;
 		void InitInput(bool bIsBot);
+		void BotUpdate();
+
+		void SetShouldPerformInterpolation(const bool Value)
+		{
+			bShouldDoInterpolation_ = Value;
+		}
 		bool GetIsInputInitalized() const
 		{
 			return bIsPlayerInputBound_;
 		}
 
 		void DoDamage(float Damage);
+		sf::Vector2f GetInterpolatedPosition() const
+		{
+			if (bShouldDoInterpolation_)
+			{
+				return InterpolatedPosition_;
+			}
+			
+			return GetPosition();
+		}
 
 	protected:
 		
@@ -46,11 +61,13 @@ namespace NS
 		void GetReplicatedProperties(std::vector<NS::ReplicatedProp>& OutReplicatedProperties) override;
 		void GetRPCSignatures(std::vector<NS::RPCProp>& OutRpcProps) override;
 		sf::Vector2f PerformInterpolation(float DeltaTime);
+		sf::Vector2f PerformHeadingInterpolation(float DeltaTime);
 		void Update(const float DeltaTime) override;
 
 	protected:
 		
 		sf::Vector2f LocalSimulatedPosition_;
+		sf::Vector2f LocalSimulatedHeading_;
 		sf::Vector2f LocalVelocity_;
 		sf::Vector2f PreviousPosition_;
 		sf::Vector2f Heading_; // REPLICATED
@@ -60,6 +77,8 @@ namespace NS
 		SpriteComponent* BodySpriteComp_ = nullptr;
 		SpriteComponent* TurretSpriteComp_ = nullptr;
 		const sf::RenderWindow* Window_ = nullptr;
+		sf::Vector2f InterpolatedPosition_;
+		sf::Vector2f InterpolatedHeading_;
 
 	private:
 		
@@ -69,5 +88,6 @@ namespace NS
 		
 		std::random_device RandomDevice;
 		ChronoTimePoint LastFiredTime;
+		bool bShouldDoInterpolation_ = true;
 	};
 }

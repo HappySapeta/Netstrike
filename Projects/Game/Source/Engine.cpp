@@ -110,6 +110,7 @@ NS::Actor* NS::Engine::CreateActor(const size_t TypeHash)
 		Networking_->AddRPCProps(RpcProps);
 	}
 			
+	OnActorCreated_(NewActor);
 	return NewActor;
 }
 

@@ -16,7 +16,8 @@ constexpr float BOT_TURN_RATE = 1.0f;
 constexpr float TURRET_TURN_RATE = 1.0f;
 constexpr float PROJECTILE_SPEED = 1000.0f;
 constexpr float TANK_HEALTH = 100.0f;
-constexpr float MAX_POSITION_ERROR = 5.0f;
+constexpr float MAX_POSITION_ERROR = 60;
+constexpr float MIN_HEADING_DOT = 0.8f;
 constexpr float FIRE_DELAY = 0.5f;
 
 constexpr float Deg2Rad(const float Deg)
@@ -39,10 +40,13 @@ NS::Tank::Tank()
 	TurretAngle_ = 0.0f;
 	Health_ = TANK_HEALTH;
 	LocalSimulatedPosition_ = {0, 0};
+	LocalSimulatedHeading_ = {0, -1};
 	LocalVelocity_ = {0, 0};
 	PreviousPosition_ = {0, 0};
 	WanderTheta_ = 0.0f;
 	LastFiredTime = ChronoClock::now();
+	InterpolatedPosition_ = {0, 0};
+	InterpolatedHeading_ = {0, -1};
 	
 	BodySpriteComp_ = AddComponent<SpriteComponent>();
 	BodySpriteComp_->SetTexture(TANK_TEXTURE);
@@ -70,12 +74,12 @@ void NS::Tank::InitInput(const bool bIsBot)
 		{
 			if (Value > 0)
 			{
-				LocalSimulatedPosition_ = GetPosition() + Heading_ * MOVEMENT_SPEED;
+				LocalSimulatedPosition_ = LocalSimulatedPosition_ + Heading_ * MOVEMENT_SPEED;
 				Networking->Client_CallRPC({this, "Server_MoveTankForward"});
 			}
 			else if (Value < 0)
 			{
-				LocalSimulatedPosition_ = GetPosition() - Heading_ * MOVEMENT_SPEED;
+				LocalSimulatedPosition_ = LocalSimulatedPosition_ - Heading_ * MOVEMENT_SPEED;
 				Networking->Client_CallRPC({this, "Server_MoveTankBackward"});
 			}
 		};
@@ -85,10 +89,12 @@ void NS::Tank::InitInput(const bool bIsBot)
 		{
 			if (Value > 0)
 			{
+				LocalSimulatedHeading_ = LocalSimulatedHeading_.rotatedBy(sf::degrees(TURN_RATE));
 				Networking->Client_CallRPC({this, "Server_TurnRight"});
 			}
 			else if (Value < 0)
 			{
+				LocalSimulatedHeading_ = LocalSimulatedHeading_.rotatedBy(sf::degrees(-TURN_RATE));
 				Networking->Client_CallRPC({this, "Server_TurnLeft"});
 			}	
 		};
@@ -121,6 +127,39 @@ void NS::Tank::InitInput(const bool bIsBot)
 #endif
 }
 
+void NS::Tank::BotUpdate()
+{
+#ifdef NS_CLIENT
+	NS::Networking::Get()->Client_CallRPC({this, "Server_BotMoveForward"});
+		
+	std::mt19937 Generator(RandomDevice());
+	Generator.seed(NetId_);
+	std::normal_distribution<float> Distribution(-1.0f, 1.0f);
+		
+	constexpr float WanderRadius = 500.0f;
+	constexpr float WanderLookAhead = 300.0f;
+	const sf::Vector2f WanderCentre = Position_ + Heading_.normalized() * WanderLookAhead;
+	WanderTheta_ += Distribution(Generator);
+		
+	const sf::Vector2f RandPos = 
+	{
+		WanderCentre.x + (WanderRadius * std::cos(Deg2Rad(WanderTheta_))), 
+		WanderCentre.y + (WanderRadius * std::sin(Deg2Rad(WanderTheta_)))
+	};
+		
+	const sf::Vector2f TargetHeading = GetSafeNormal(RandPos - Position_);
+	const float TargetHeadingAngle = TargetHeading.length() == 0 ? 0.0f : TargetHeading.angle().asDegrees();
+	if (TargetHeadingAngle > 0)
+	{
+		NS::Networking::Get()->Client_CallRPC({this, "Server_BotTurnRight"});
+	}
+	else
+	{
+		NS::Networking::Get()->Client_CallRPC({this, "Server_BotTurnLeft"});
+	}
+#endif
+}
+
 void NS::Tank::Update(const float DeltaTime)
 {
 	Actor::Update(DeltaTime);
@@ -131,33 +170,7 @@ void NS::Tank::Update(const float DeltaTime)
 	
 	if (bIsBot_)
 	{
-		NS::Networking::Get()->Client_CallRPC({this, "Server_BotMoveForward"});
-		
-		std::mt19937 Generator(RandomDevice());
-		Generator.seed(NetId_);
-		std::normal_distribution<float> Distribution(-1.0f, 1.0f);
-		
-		constexpr float WanderRadius = 500.0f;
-		constexpr float WanderLookAhead = 300.0f;
-		const sf::Vector2f WanderCentre = Position_ + Heading_.normalized() * WanderLookAhead;
-		WanderTheta_ += Distribution(Generator);
-		
-		const sf::Vector2f RandPos = 
-		{
-			WanderCentre.x + (WanderRadius * std::cos(Deg2Rad(WanderTheta_))), 
-			WanderCentre.y + (WanderRadius * std::sin(Deg2Rad(WanderTheta_)))
-		};
-		
-		const sf::Vector2f TargetHeading = GetSafeNormal(RandPos - Position_);
-		const float TargetHeadingAngle = TargetHeading.length() == 0 ? 0.0f : TargetHeading.angle().asDegrees();
-		if (TargetHeadingAngle > 0)
-		{
-			NS::Networking::Get()->Client_CallRPC({this, "Server_BotTurnRight"});
-		}
-		else
-		{
-			NS::Networking::Get()->Client_CallRPC({this, "Server_BotTurnLeft"});
-		}
+		BotUpdate();
 	}
 #endif
 #ifdef NS_SERVER
@@ -165,7 +178,8 @@ void NS::Tank::Update(const float DeltaTime)
 	TurretSpriteComp_->SetPosition(Position_);
 #endif
 	
-	BodySpriteComp_->SetRotation(Heading_.angle());
+	const sf::Vector2f PredictedHeading = PerformHeadingInterpolation(DeltaTime);
+	BodySpriteComp_->SetRotation(PredictedHeading.angle());
 	TurretSpriteComp_->SetRotation(sf::degrees(TurretAngle_));
 	
 	LocalVelocity_ = (Position_ - PreviousPosition_) / DeltaTime;
@@ -174,22 +188,61 @@ void NS::Tank::Update(const float DeltaTime)
 
 sf::Vector2f NS::Tank::PerformInterpolation(float DeltaTime)
 {
-	// For player
-	if (bIsPlayerInputBound_)
+	InterpolatedPosition_ = Position_;
+	if (bShouldDoInterpolation_)
 	{
-		const float Distance = (LocalSimulatedPosition_ - Position_).length();
-		if (Distance >= MAX_POSITION_ERROR)
+		// For player
+		if (!bIsBot_ && bIsPlayerInputBound_)
 		{
-			return Position_;
+			const float Distance = (LocalSimulatedPosition_ - Position_).length();
+			if (Distance >= MAX_POSITION_ERROR)
+			{
+				InterpolatedPosition_ = Position_;
+			}
+			else
+			{
+				InterpolatedPosition_ = LocalSimulatedPosition_;
+			}
 		}
-		return LocalSimulatedPosition_;
+		// For bots
+		else
+		{
+			sf::Vector2f PredictedPosition = PreviousPosition_ + LocalVelocity_ * DeltaTime;
+			InterpolatedPosition_ = PredictedPosition;
+		}
 	}
-	// For bots
-	else
+	
+	LocalSimulatedPosition_ = InterpolatedPosition_;
+	return InterpolatedPosition_;
+}
+
+sf::Vector2f NS::Tank::PerformHeadingInterpolation(float DeltaTime)
+{
+	InterpolatedHeading_ = Heading_;
+	if (bShouldDoInterpolation_)
 	{
-		sf::Vector2f PredictedPosition = PreviousPosition_ + LocalVelocity_ * DeltaTime;
-		return PredictedPosition;
+		// For player
+		if (!bIsBot_ && bIsPlayerInputBound_)
+		{
+			const float DotProduct = GetSafeNormal(Heading_).dot(GetSafeNormal(LocalSimulatedHeading_));
+			if (DotProduct < MIN_HEADING_DOT)
+			{
+				InterpolatedHeading_ = Heading_;
+			}
+			else
+			{
+				InterpolatedHeading_ = LocalSimulatedHeading_;
+			}
+		}
+		// For bots
+		else
+		{
+			InterpolatedHeading_ = Heading_;
+		}
 	}
+	
+	LocalSimulatedHeading_ = InterpolatedHeading_;
+	return InterpolatedHeading_;
 }
 
 size_t NS::Tank::GetTypeInfo() const
