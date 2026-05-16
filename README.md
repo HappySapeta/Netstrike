@@ -1,5 +1,7 @@
 ## CMP425/501 Assessment Project
 
+<img width="1343" height="955" alt="image" src="https://github.com/user-attachments/assets/06ffc555-eca3-4bbd-97b3-fe93cfbafd96" />
+
 ### Net Strike
 A multiplayer game featuring a custom server–client networking architecture inspired by Unreal Engine.
 Made with SFML and written in C++.
