@@ -44,7 +44,16 @@ Run `LaunchClients.bat <NUMBER OF CLIENTS> <PORT NUMBER> <USE NETWORK INTERPOLAT
 WASD to move the Tank.
 <br> SPACEBAR to fire weapon.
 
+## Usage Examples
 
+### Registering properties for replication.
+https://github.com/HappySapeta/Netstrike/blob/e6e568f02bc07de3a2ab85b4b5301e45203cefee/Projects/Game/Source/Tank.cpp#L331-L336
+
+### Registering RPCs
+https://github.com/HappySapeta/Netstrike/blob/e6e568f02bc07de3a2ab85b4b5301e45203cefee/Projects/Game/Source/Tank.cpp#L338-L350
+
+#### Client Side call to Server RPC
+https://github.com/HappySapeta/Netstrike/blob/e6e568f02bc07de3a2ab85b4b5301e45203cefee/Projects/Game/Source/Tank.cpp#L78
 
 
 
